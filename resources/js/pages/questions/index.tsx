@@ -1,17 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import {
-    Bookmark,
-    BookmarkCheck,
-    Check,
-    ChevronLeft,
-    ChevronRight,
-    Filter,
-    X,
-} from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
+import { QuestionCard } from '@/components/question-card';
+import { SignsInfoDialog } from '@/components/signs-info-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
@@ -50,6 +43,13 @@ interface LicenseType {
     children: LicenseType[];
 }
 
+interface Sign {
+    id: number;
+    image: string;
+    title: string;
+    description: string | null;
+}
+
 interface Question {
     id: number;
     question: string;
@@ -61,6 +61,7 @@ interface Question {
     is_active: boolean;
     answers: Answer[];
     question_category: QuestionCategory;
+    signs: Sign[];
 }
 
 interface UserProgress {
@@ -128,6 +129,7 @@ export default function QuestionsIndex({
     const [sessionScore, setSessionScore] = useState({ correct: 0, wrong: 0 });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
+    const [signsModalQuestion, setSignsModalQuestion] = useState<Question | null>(null);
 
     // Shuffle answers once per page load while preserving correct answer tracking
     const shuffledAnswers = useMemo(() => {
@@ -254,19 +256,6 @@ export default function QuestionsIndex({
         });
     }, [filters]);
 
-    const getAnswerClassName = (question: Question, answer: Answer) => {
-        const state = answerStates[question.id];
-        if (!state) return 'border-border hover:border-primary hover:bg-accent';
-
-        if (answer.id === state.correctAnswerId) {
-            return 'border-green-500 bg-green-50 dark:bg-green-950';
-        }
-        if (answer.id === state.selectedAnswerId && !state.isCorrect) {
-            return 'border-red-500 bg-red-50 dark:bg-red-950';
-        }
-        return 'border-border opacity-50';
-    };
-
     return (
         <MobileLayout>
             <Head title="ბილეთები" />
@@ -296,10 +285,10 @@ export default function QuestionsIndex({
                             <SheetTitle>ფილტრები</SheetTitle>
                         </SheetHeader>
 
-                        <div className="mt-6 space-y-6">
+                        <div className="mt-4 space-y-5 px-1">
                             {/* License Type Filter */}
-                            <div className="space-y-2">
-                                <Label>კატეგორია</Label>
+                            <div className="space-y-3">
+                                <Label className="mb-2 block text-base font-semibold">კატეგორია</Label>
                                 <Select
                                     value={localFilters.license_type?.toString() || 'all'}
                                     onValueChange={(v) =>
@@ -309,7 +298,7 @@ export default function QuestionsIndex({
                                         }))
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-12 text-base">
                                         <SelectValue placeholder="ყველა კატეგორია" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -326,15 +315,15 @@ export default function QuestionsIndex({
                             </div>
 
                             {/* Per Page */}
-                            <div className="space-y-2">
-                                <Label>გვერდზე</Label>
+                            <div className="space-y-3">
+                                <Label className="mb-2 block text-base font-semibold">გვერდზე</Label>
                                 <Select
                                     value={localFilters.per_page.toString()}
                                     onValueChange={(v) =>
                                         setLocalFilters((f) => ({ ...f, per_page: parseInt(v) }))
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-12 text-base">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -349,9 +338,9 @@ export default function QuestionsIndex({
 
                             {/* Status Filters */}
                             <div className="space-y-3">
-                                <Label>სტატუსი</Label>
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-2">
+                                <Label className="mb-2 block text-base font-semibold">სტატუსი</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
                                             checked={localFilters.bookmarked}
                                             onCheckedChange={(c) =>
@@ -363,7 +352,7 @@ export default function QuestionsIndex({
                                         />
                                         <span className="text-sm">შენახული</span>
                                     </label>
-                                    <label className="flex items-center gap-2">
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
                                             checked={localFilters.wrong_only}
                                             onCheckedChange={(c) =>
@@ -373,9 +362,9 @@ export default function QuestionsIndex({
                                                 }))
                                             }
                                         />
-                                        <span className="text-sm">არასწორი პასუხები</span>
+                                        <span className="text-sm">შეცდომები</span>
                                     </label>
-                                    <label className="flex items-center gap-2">
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
                                             checked={localFilters.unanswered}
                                             onCheckedChange={(c) =>
@@ -387,7 +376,7 @@ export default function QuestionsIndex({
                                         />
                                         <span className="text-sm">უპასუხო</span>
                                     </label>
-                                    <label className="flex items-center gap-2">
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
                                             checked={localFilters.show_inactive}
                                             onCheckedChange={(c) =>
@@ -397,19 +386,20 @@ export default function QuestionsIndex({
                                                 }))
                                             }
                                         />
-                                        <span className="text-sm">არააქტიურიც</span>
+                                        <span className="text-sm">ამოღებული</span>
                                     </label>
                                 </div>
                             </div>
 
                             {/* Category Filter */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label>თემები</Label>
-                                    <div className="space-x-2">
+                            <div className="space-y-3">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <Label className="text-base font-semibold">თემები</Label>
+                                    <div className="flex gap-1">
                                         <Button
                                             variant="ghost"
                                             size="sm"
+                                            className="h-8 px-2 text-xs"
                                             onClick={() =>
                                                 setLocalFilters((f) => ({
                                                     ...f,
@@ -422,6 +412,7 @@ export default function QuestionsIndex({
                                         <Button
                                             variant="ghost"
                                             size="sm"
+                                            className="h-8 px-2 text-xs"
                                             onClick={() =>
                                                 setLocalFilters((f) => ({ ...f, categories: [] }))
                                             }
@@ -430,9 +421,9 @@ export default function QuestionsIndex({
                                         </Button>
                                     </div>
                                 </div>
-                                <div className="max-h-48 space-y-1 overflow-y-auto rounded border p-2">
+                                <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border p-2">
                                     {categories.map((cat) => (
-                                        <label key={cat.id} className="flex items-center gap-2">
+                                        <label key={cat.id} className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent">
                                             <Checkbox
                                                 checked={localFilters.categories.includes(cat.id)}
                                                 onCheckedChange={(c) =>
@@ -446,22 +437,22 @@ export default function QuestionsIndex({
                                                     }))
                                                 }
                                             />
-                                            <span className="text-xs">{cat.name}</span>
+                                            <span className="text-sm">{cat.name}</span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-2">
+                            <div className="flex gap-3 pt-2">
                                 <Button
                                     variant="outline"
-                                    className="flex-1"
+                                    className="h-12 flex-1 text-base"
                                     onClick={resetFilters}
                                 >
                                     გასუფთავება
                                 </Button>
-                                <Button className="flex-1" onClick={applyFilters}>
+                                <Button className="h-12 flex-1 text-base" onClick={applyFilters}>
                                     გამოყენება
                                 </Button>
                             </div>
@@ -472,116 +463,19 @@ export default function QuestionsIndex({
 
             {/* Questions List */}
             <div className="space-y-4 p-4">
-                {questions.data.map((question, index) => {
-                    const state = answerStates[question.id];
-                    const isBookmarked = bookmarkedQuestions[question.id] || false;
-                    const questionNumber =
-                        (questions.current_page - 1) * questions.per_page + index + 1;
-
-                    return (
-                        <Card
-                            key={question.id}
-                            className={`py-0 ${!question.is_active ? 'opacity-60' : ''}`}
-                        >
-                            <CardContent className="p-4">
-                                {/* Question Header */}
-                                <div className="mb-3 flex items-start justify-between">
-                                    <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
-                                        #{questionNumber}
-                                    </span>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() =>
-                                            handleBookmark(question.id)
-                                        }
-                                    >
-                                        {isBookmarked ? (
-                                            <BookmarkCheck className="h-5 w-5 text-yellow-500" />
-                                        ) : (
-                                            <Bookmark className="h-5 w-5" />
-                                        )}
-                                    </Button>
-                                </div>
-
-                                {/* Question Image */}
-                                {(question.image || question.image_custom) && (
-                                    <div className="relative mb-4 overflow-hidden rounded-lg">
-                                        <img
-                                            src={`/images/ticket_images/${question.image_custom || question.image}`}
-                                            alt="კითხვის სურათი"
-                                            className="scale-[1.008] w-full object-contain"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Question Text - uses negative margin to overlap image when not short_image */}
-                                {(question.image || question.image_custom) &&
-                                !question.is_short_image ? (
-                                    <div className="relative z-1 mx-0 -mt-[12%] mb-4 rounded bg-[#141414]/65 px-4 py-3">
-                                        <p className="text-center text-sm leading-snug font-medium text-white">
-                                            {question.question}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <p className="mb-4 text-base leading-relaxed font-medium">
-                                        {question.question}
-                                    </p>
-                                )}
-
-                                {/* Answer Options */}
-                                <div className="space-y-2">
-                                    {(shuffledAnswers[question.id] || question.answers).map((answer, answerIndex) => (
-                                        <button
-                                            key={answer.id}
-                                            onClick={() =>
-                                                handleAnswer(
-                                                    question,
-                                                    answer.id,
-                                                )
-                                            }
-                                            disabled={!!state?.selectedAnswerId}
-                                            className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${getAnswerClassName(question, answer)}`}
-                                        >
-                                            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs">
-                                                {answerIndex + 1}
-                                            </span>
-                                            <span className="text-sm">
-                                                {answer.text}
-                                            </span>
-                                            {state?.correctAnswerId ===
-                                                answer.id && (
-                                                <Check className="ml-auto h-5 w-5 shrink-0 text-green-600" />
-                                            )}
-                                            {state?.selectedAnswerId ===
-                                                answer.id &&
-                                                !state.isCorrect && (
-                                                    <X className="ml-auto h-5 w-5 shrink-0 text-red-600" />
-                                                )}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Explanation */}
-                                {state?.explanation && (
-                                    <div className="mt-4 rounded-lg bg-muted p-3">
-                                        <p className="text-sm text-muted-foreground">
-                                            {state.explanation}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Category Tag */}
-                                <div className="mt-4">
-                                    <span className="text-xs text-muted-foreground">
-                                        {question.question_category.name}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+                {questions.data.map((question, index) => (
+                    <QuestionCard
+                        key={question.id}
+                        question={question}
+                        questionNumber={(questions.current_page - 1) * questions.per_page + index + 1}
+                        shuffledAnswers={shuffledAnswers[question.id] || question.answers}
+                        answerState={answerStates[question.id]}
+                        isBookmarked={bookmarkedQuestions[question.id] || false}
+                        onAnswer={handleAnswer}
+                        onBookmark={handleBookmark}
+                        onInfoClick={setSignsModalQuestion}
+                    />
+                ))}
             </div>
 
             {/* Pagination */}
@@ -610,6 +504,14 @@ export default function QuestionsIndex({
                     </Button>
                 </div>
             )}
+
+            {/* Signs Info Modal */}
+            <SignsInfoDialog
+                open={!!signsModalQuestion}
+                onOpenChange={(open) => !open && setSignsModalQuestion(null)}
+                description={signsModalQuestion?.description || null}
+                signs={signsModalQuestion?.signs || []}
+            />
         </MobileLayout>
     );
 }

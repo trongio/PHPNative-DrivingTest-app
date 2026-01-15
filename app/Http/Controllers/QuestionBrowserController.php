@@ -28,7 +28,7 @@ class QuestionBrowserController extends Controller
 
         // Build query
         $query = Question::query()
-            ->with(['answers' => fn ($q) => $q->orderBy('position'), 'questionCategory', 'licenseTypes']);
+            ->with(['answers' => fn ($q) => $q->orderBy('position'), 'questionCategory', 'licenseTypes', 'signs']);
 
         // Filter by active status
         if (! $showInactive) {
