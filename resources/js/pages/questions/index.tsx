@@ -57,6 +57,7 @@ interface Question {
     full_description: string | null;
     image: string | null;
     image_custom: string | null;
+    is_short_image: boolean;
     is_active: boolean;
     answers: Answer[];
     question_category: QuestionCategory;
@@ -136,12 +137,18 @@ export default function QuestionsIndex({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
                         'meta[name="csrf-token"]'
                     )?.content || '',
                 },
                 body: JSON.stringify({ answer_id: answerId }),
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
 
@@ -171,11 +178,17 @@ export default function QuestionsIndex({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
                         'meta[name="csrf-token"]'
                     )?.content || '',
                 },
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
             setBookmarkedQuestions((prev) => ({
@@ -270,11 +283,11 @@ export default function QuestionsIndex({
                             <div className="space-y-2">
                                 <Label>კატეგორია</Label>
                                 <Select
-                                    value={localFilters.license_type?.toString() || ''}
+                                    value={localFilters.license_type?.toString() || 'all'}
                                     onValueChange={(v) =>
                                         setLocalFilters((f) => ({
                                             ...f,
-                                            license_type: v ? parseInt(v) : null,
+                                            license_type: v === 'all' ? null : parseInt(v),
                                         }))
                                     }
                                 >
@@ -282,7 +295,7 @@ export default function QuestionsIndex({
                                         <SelectValue placeholder="ყველა კატეგორია" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">ყველა კატეგორია</SelectItem>
+                                        <SelectItem value="all">ყველა კატეგორია</SelectItem>
                                         {licenseTypes.map((lt) => (
                                             <SelectItem key={lt.id} value={lt.id.toString()}>
                                                 {lt.code}
@@ -448,7 +461,10 @@ export default function QuestionsIndex({
                         (questions.current_page - 1) * questions.per_page + index + 1;
 
                     return (
-                        <Card key={question.id} className={!question.is_active ? 'opacity-60' : ''}>
+                        <Card
+                            key={question.id}
+                            className={`py-0 ${!question.is_active ? 'opacity-60' : ''}`}
+                        >
                             <CardContent className="p-4">
                                 {/* Question Header */}
                                 <div className="mb-3 flex items-start justify-between">
@@ -459,7 +475,9 @@ export default function QuestionsIndex({
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8"
-                                        onClick={() => handleBookmark(question.id)}
+                                        onClick={() =>
+                                            handleBookmark(question.id)
+                                        }
                                     >
                                         {isBookmarked ? (
                                             <BookmarkCheck className="h-5 w-5 text-yellow-500" />
@@ -471,37 +489,55 @@ export default function QuestionsIndex({
 
                                 {/* Question Image */}
                                 {(question.image || question.image_custom) && (
-                                    <div className="mb-4 overflow-hidden rounded-lg">
+                                    <div className="relative mb-4 overflow-hidden rounded-lg">
                                         <img
-                                            src={`/images/tickets/${question.image_custom || question.image}`}
+                                            src={`/images/ticket_images/${question.image_custom || question.image}`}
                                             alt="კითხვის სურათი"
-                                            className="w-full object-contain"
+                                            className="scale-[1.008] w-full object-contain"
                                         />
                                     </div>
                                 )}
 
-                                {/* Question Text */}
-                                <p className="mb-4 text-base font-medium leading-relaxed">
-                                    {question.question}
-                                </p>
+                                {/* Question Text - uses negative margin to overlap image when not short_image */}
+                                {(question.image || question.image_custom) &&
+                                !question.is_short_image ? (
+                                    <div className="relative z-10 mx-0 -mt-[12%] mb-4 rounded bg-[#141414]/65 px-4 py-3">
+                                        <p className="text-center text-sm leading-snug font-medium text-white">
+                                            {question.question}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="mb-4 text-base leading-relaxed font-medium">
+                                        {question.question}
+                                    </p>
+                                )}
 
                                 {/* Answer Options */}
                                 <div className="space-y-2">
                                     {question.answers.map((answer) => (
                                         <button
                                             key={answer.id}
-                                            onClick={() => handleAnswer(question, answer.id)}
+                                            onClick={() =>
+                                                handleAnswer(
+                                                    question,
+                                                    answer.id,
+                                                )
+                                            }
                                             disabled={!!state?.selectedAnswerId}
                                             className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${getAnswerClassName(question, answer)}`}
                                         >
                                             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs">
                                                 {answer.position}
                                             </span>
-                                            <span className="text-sm">{answer.text}</span>
-                                            {state?.correctAnswerId === answer.id && (
+                                            <span className="text-sm">
+                                                {answer.text}
+                                            </span>
+                                            {state?.correctAnswerId ===
+                                                answer.id && (
                                                 <Check className="ml-auto h-5 w-5 shrink-0 text-green-600" />
                                             )}
-                                            {state?.selectedAnswerId === answer.id &&
+                                            {state?.selectedAnswerId ===
+                                                answer.id &&
                                                 !state.isCorrect && (
                                                     <X className="ml-auto h-5 w-5 shrink-0 text-red-600" />
                                                 )}
