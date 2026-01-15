@@ -138,6 +138,7 @@ A dedicated section for browsing and learning road signs separately from test mo
 - [ ] Configurable question count (10-400)
 - [ ] Focus on weak areas
 - [ ] Can combine multiple categories
+- [ ] Option to include inactive questions for comprehensive practice
 
 ### 5.3 Learning Mode / Question Browser (ბილეთები/სასწავლო რეჟიმი)
 Browse and practice questions at your own pace without test pressure.
@@ -154,8 +155,13 @@ Browse and practice questions at your own pace without test pressure.
 - [ ] **Filter by License Type**: Select parent category (B, A, C, D, T)
   - Shows "B, B1" format when B selected
 - [ ] **Filter by Question Categories**: Select one or multiple of 46 categories
+- [ ] **Filter by Active Status**: Toggle to include/exclude inactive questions
+  - Default: Show only active questions (is_active = true)
+  - Option to show all questions (active + inactive)
+  - Option to show only inactive questions (for review/learning)
+  - Inactive questions visually distinguished (e.g., muted styling, badge)
 - [ ] **Select All / Deselect All** categories option
-- [ ] Filters can be combined (e.g., License B + Categories 45, 46)
+- [ ] Filters can be combined (e.g., License B + Categories 45, 46 + Inactive)
 - [ ] Show question count matching current filters
 - [ ] Remember last used filters
 
@@ -440,6 +446,7 @@ Each completed test saves:
 - Correct answer index (0-based)
 - Explanation text (Georgian)
 - Difficulty level (calculated from user stats)
+- Is Active (boolean, allows filtering active/inactive questions)
 - Created at
 - Updated at
 
