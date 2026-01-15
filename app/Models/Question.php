@@ -49,4 +49,9 @@ class Question extends Model
     {
         return $this->belongsToMany(Sign::class);
     }
+
+    public function userProgress(): HasMany
+    {
+        return $this->hasMany(UserQuestionProgress::class);
+    }
 }
