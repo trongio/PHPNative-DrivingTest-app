@@ -7,6 +7,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Filter,
+    Motorbike,
     Shield,
     Tractor,
     TramFront,
@@ -137,7 +138,7 @@ const getLicenseTypeIcon = (code: string) => {
     }
     // A, A1 - Motorcycle
     if (upperCode.startsWith('A')) {
-        return <Bike className={iconClass} />;
+        return <Motorbike className={iconClass} />;
     }
     // B, B1 - Car
     if (upperCode.startsWith('B')) {
