@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
     Dialog,
@@ -18,6 +18,7 @@ interface SignsInfoDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     description: string | null;
+    imageCustom: string | null;
     signs: Sign[];
 }
 
@@ -25,9 +26,30 @@ export function SignsInfoDialog({
     open,
     onOpenChange,
     description,
+    imageCustom,
     signs,
 }: SignsInfoDialogProps) {
     const [selectedSign, setSelectedSign] = useState<Sign | null>(null);
+
+    // Handle Android back button to close modal instead of navigating
+    useEffect(() => {
+        const handlePopState = (e: PopStateEvent) => {
+            if (open) {
+                e.preventDefault();
+                onOpenChange(false);
+                // Re-push state to prevent actual navigation
+                window.history.pushState(null, '', window.location.href);
+            }
+        };
+
+        // Push initial state when modal opens
+        if (open) {
+            window.history.pushState(null, '', window.location.href);
+        }
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [open, onOpenChange]);
 
     const handleOpenChange = (newOpen: boolean) => {
         if (!newOpen) {
@@ -39,8 +61,10 @@ export function SignsInfoDialog({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>დამატებითი ინფორმაცია</DialogTitle>
+                <DialogHeader className="pr-8">
+                    <DialogTitle className="text-left">
+                        დამატებითი ინფორმაცია
+                    </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                     {/* Signs Grid - 5 columns */}
@@ -85,11 +109,6 @@ export function SignsInfoDialog({
                             className="rounded-lg border bg-card p-4"
                         >
                             <div className="flex items-start gap-4">
-                                <img
-                                    src={`/images/signs/${selectedSign.image}`}
-                                    alt={selectedSign.title}
-                                    className="h-20 w-20 shrink-0 object-contain"
-                                />
                                 <div className="flex-1">
                                     <h4 className="font-semibold">
                                         {selectedSign.title}
@@ -101,6 +120,17 @@ export function SignsInfoDialog({
                                     )}
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Custom Image (illustrative image for description) */}
+                    {imageCustom && (
+                        <div className="overflow-hidden rounded-lg">
+                            <img
+                                src={`/images/ticket_images_custom/${imageCustom}`}
+                                alt="დამატებითი სურათი"
+                                className="w-full object-contain"
+                            />
                         </div>
                     )}
 

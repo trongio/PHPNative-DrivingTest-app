@@ -618,6 +618,7 @@ export default function QuestionsIndex({
                 open={!!signsModalQuestion}
                 onOpenChange={(open) => !open && setSignsModalQuestion(null)}
                 description={signsModalQuestion?.description || null}
+                imageCustom={signsModalQuestion?.image_custom || null}
                 signs={signsModalQuestion?.signs || []}
             />
         </MobileLayout>

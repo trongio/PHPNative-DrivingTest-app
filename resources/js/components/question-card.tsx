@@ -86,9 +86,14 @@ export function QuestionCard({
             <CardContent className="p-4">
                 {/* Question Header */}
                 <div className="mb-3 flex items-start justify-between">
-                    <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
-                        #{questionNumber}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
+                            #{questionNumber}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                            ID: {question.id}
+                        </span>
+                    </div>
                     <div className="flex items-center gap-1">
                         <Button
                             variant="ghost"
@@ -103,7 +108,8 @@ export function QuestionCard({
                             )}
                         </Button>
                         {(question.signs.length > 0 ||
-                            question.description) && (
+                            question.description ||
+                            question.image_custom) && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -117,10 +123,10 @@ export function QuestionCard({
                 </div>
 
                 {/* Question Image */}
-                {(question.image || question.image_custom) && (
+                {question.image && (
                     <div className="relative mb-4 overflow-hidden rounded-lg">
                         <img
-                            src={`/images/ticket_images/${question.image_custom || question.image}`}
+                            src={`/images/ticket_images/${question.image}`}
                             alt="კითხვის სურათი"
                             className="w-full scale-[1.008] object-contain"
                         />
@@ -128,8 +134,7 @@ export function QuestionCard({
                 )}
 
                 {/* Question Text - uses negative margin to overlap image when not short_image */}
-                {(question.image || question.image_custom) &&
-                !question.is_short_image ? (
+                {question.image && !question.is_short_image ? (
                     <div className="relative z-1 mx-0 -mt-[12%] mb-4 rounded bg-[#141414]/65 px-4 py-3">
                         <p className="text-center text-sm leading-snug font-medium text-white">
                             {question.question}
