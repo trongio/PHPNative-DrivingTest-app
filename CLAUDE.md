@@ -74,6 +74,57 @@ SQLite database. Primary model is `User` with Fortify 2FA columns.
 ### NativePHP Mobile
 Configuration in `config/nativephp.php` controls app version, permissions (camera, biometric, push notifications), orientation settings, and hot reload paths.
 
+**Documentation**: https://nativephp.com/docs/mobile/2
+
+**Edge Components** (Native UI):
+- `<native:top-bar>` - Native header with title, subtitle, and action buttons
+- `<native:bottom-nav>` - Bottom navigation with up to 5 items
+- `<native:top-bar-action>` - Action buttons for TopBar
+
+**TopBar Props**:
+- `title` (required), `subtitle`, `show-navigation-icon`, `background-color`, `text-color`, `elevation`
+
+**BottomNav Props**:
+- `label-visibility`: "labeled" | "selected" | "unlabeled"
+- Item props: `id`, `icon`, `label`, `url`, `active`, `badge`, `news`
+
+**Icons**: Use platform-agnostic names like `home`, `person`, `search`, `book`, `edit`, `image`, `settings`, `notifications`. Icons auto-translate to SF Symbols (iOS) and Material Icons (Android).
+
+**Web View**:
+- Use `viewport-fit=cover` for edge-to-edge rendering
+- Safe area CSS variables: `--inset-top`, `--inset-bottom`, `--inset-left`, `--inset-right`
+- Apply `nativephp-safe-area` class for automatic safe area padding
+- Status bar style in config: `auto`, `light`, or `dark`
+
+**Mobile Layout**: Use `resources/js/layouts/mobile-layout.tsx` for pages with native TopBar and BottomNav.
+
+### NativePHP Form Submission (CRITICAL)
+
+**Issue**: NativePHP WebView does NOT properly parse `multipart/form-data` requests. Form data arrives empty on the server even though the request is sent correctly.
+
+**Solution**: Use JSON (`application/json`) for form submissions. Only use `forceFormData: true` when actually uploading files.
+
+```tsx
+// CORRECT - Use JSON for text-only forms
+const form = useForm({ name: '', email: '' });
+form.post('/register'); // Sends as application/json - WORKS
+
+// CORRECT - Use FormData only when uploading files
+const form = useForm({ name: '', avatar: null as File | null });
+const handleSubmit = () => {
+    if (form.data.avatar) {
+        form.post('/register', { forceFormData: true }); // File upload
+    } else {
+        form.post('/register'); // JSON for text-only
+    }
+};
+
+// WRONG - Don't force FormData for text-only submissions
+form.post('/register', { forceFormData: true }); // Data arrives EMPTY!
+```
+
+**Debugging**: Use `dd($request->all())` in controllers to see what data is received. In NativePHP, `dd()` output displays in the WebView.
+
 ---
 
 <laravel-boost-guidelines>
