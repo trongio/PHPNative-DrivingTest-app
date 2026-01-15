@@ -8,28 +8,22 @@ import { useActiveUrl } from '@/hooks/use-active-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
-import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'პროფილი',
         href: edit(),
         icon: null,
     },
     {
-        title: 'Password',
+        title: 'პაროლი',
         href: editPassword(),
         icon: null,
     },
     {
-        title: 'Two-Factor Auth',
-        href: show(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
+        title: 'გარეგნობა',
         href: editAppearance(),
         icon: null,
     },
@@ -46,8 +40,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title="პარამეტრები"
+                description="მართეთ თქვენი პროფილი და ანგარიშის პარამეტრები"
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
