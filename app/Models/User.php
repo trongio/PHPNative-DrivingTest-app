@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -48,5 +50,30 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function questionProgress(): HasMany
+    {
+        return $this->hasMany(UserQuestionProgress::class);
+    }
+
+    public function testTemplates(): HasMany
+    {
+        return $this->hasMany(TestTemplate::class);
+    }
+
+    public function testResults(): HasMany
+    {
+        return $this->hasMany(TestResult::class);
+    }
+
+    public function statistic(): HasOne
+    {
+        return $this->hasOne(UserStatistic::class);
+    }
+
+    public function bookmarkedQuestions(): HasMany
+    {
+        return $this->hasMany(UserQuestionProgress::class)->where('is_bookmarked', true);
     }
 }
