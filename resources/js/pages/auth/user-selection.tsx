@@ -42,13 +42,9 @@ export default function UserSelection({ users }: Props) {
             loginForm.setData('password', '');
             loginForm.clearErrors();
         } else {
-            // Direct login for passwordless users
-            loginForm.setData('user_id', user.id);
-            loginForm.post('/login', {
-                onError: () => {
-                    // Handle error
-                },
-            });
+            // Direct login for passwordless users - use router.post with data directly
+            // (setData is async, so loginForm.post would use stale data)
+            router.post('/login', { user_id: user.id, password: '' });
         }
     };
 

@@ -26,17 +26,24 @@ export interface SharedData {
     name: string;
     auth: Auth;
     sidebarOpen: boolean;
+    // Native navigation props (used by app.blade.php for NativePHP TopBar/BottomNav)
+    pageTitle?: string;
+    pageSubtitle?: string;
+    showBackButton?: boolean;
+    showTopBar?: boolean;
+    showBottomNav?: boolean;
     [key: string]: unknown;
 }
 
 export interface User {
     id: number;
     name: string;
-    email: string;
+    email: string | null;
     avatar?: string;
+    profile_image_url?: string | null;
+    has_password?: boolean;
     email_verified_at: string | null;
-    two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    [key: string]: unknown;
 }

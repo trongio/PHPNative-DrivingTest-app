@@ -1,37 +1,84 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-    },
-];
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import MobileLayout from '@/layouts/mobile-layout';
+import { type SharedData } from '@/types';
 
 export default function Dashboard() {
+    const { auth } = usePage<SharedData>().props;
+    const user = auth.user;
+
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+        <MobileLayout>
+            <Head title="მთავარი" />
+            <div className="flex flex-col gap-4 p-4">
+                {/* User Profile Card */}
+                <Card>
+                    <CardContent className="flex items-center gap-4 p-4">
+                        <Avatar className="h-16 w-16">
+                            <AvatarImage src={user.profile_image_url || undefined} alt={user.name} />
+                            <AvatarFallback className="bg-primary text-xl text-primary-foreground">
+                                {getInitials(user.name)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <h2 className="text-lg font-semibold">{user.name}</h2>
+                            <p className="text-sm text-muted-foreground">მოსწავლე</p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Statistics */}
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base">სტატისტიკა</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-3">
+                        <div className="rounded-lg bg-blue-500/10 p-3 text-center">
+                            <div className="text-2xl font-bold text-blue-500">0</div>
+                            <div className="text-xs text-muted-foreground">ტესტები</div>
+                        </div>
+                        <div className="rounded-lg bg-green-500/10 p-3 text-center">
+                            <div className="text-2xl font-bold text-green-500">0%</div>
+                            <div className="text-xs text-muted-foreground">წარმატება</div>
+                        </div>
+                        <div className="rounded-lg bg-purple-500/10 p-3 text-center">
+                            <div className="text-2xl font-bold text-purple-500">0</div>
+                            <div className="text-xs text-muted-foreground">სწორი პასუხი</div>
+                        </div>
+                        <div className="rounded-lg bg-orange-500/10 p-3 text-center">
+                            <div className="text-2xl font-bold text-orange-500">0</div>
+                            <div className="text-xs text-muted-foreground">არასწორი</div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Progress */}
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base">პროგრესი</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="mb-2 flex justify-between text-sm">
+                            <span className="text-muted-foreground">შესწავლილი კითხვები</span>
+                            <span className="font-medium">0 / 1000</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                            <div className="h-full w-0 rounded-full bg-primary transition-all" />
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-        </AppLayout>
+        </MobileLayout>
     );
 }

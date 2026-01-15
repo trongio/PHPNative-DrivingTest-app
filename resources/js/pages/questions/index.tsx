@@ -117,7 +117,6 @@ export default function QuestionsIndex({
     licenseTypes,
     categories,
     filters,
-    stats,
 }: Props) {
     const [answerStates, setAnswerStates] = useState<Record<number, AnswerState>>({});
     const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Record<number, boolean>>(
@@ -238,7 +237,7 @@ export default function QuestionsIndex({
     };
 
     return (
-        <MobileLayout title="ბილეთები" subtitle={`${stats.filtered} კითხვა`}>
+        <MobileLayout>
             <Head title="ბილეთები" />
 
             {/* Score Bar */}
