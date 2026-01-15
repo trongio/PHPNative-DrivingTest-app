@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **NativePHP Mobile Driving Test App** - a Laravel 12 application with React 19 frontend using Inertia.js v2, designed to be compiled as a native mobile application using NativePHP Mobile.
 
+## Git Commits
+
+- Never include "Co-Authored-By: Claude" or any Claude attribution in commit messages
+- Keep commit messages concise and descriptive
+
 ## Development Commands
 
 ```bash
