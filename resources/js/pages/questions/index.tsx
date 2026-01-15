@@ -8,7 +8,7 @@ import {
     Filter,
     X,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -128,6 +128,24 @@ export default function QuestionsIndex({
     const [sessionScore, setSessionScore] = useState({ correct: 0, wrong: 0 });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
+
+    // Shuffle answers once per page load while preserving correct answer tracking
+    const shuffledAnswers = useMemo(() => {
+        const shuffleArray = <T,>(array: T[]): T[] => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        };
+
+        const map: Record<number, Answer[]> = {};
+        questions.data.forEach((question) => {
+            map[question.id] = shuffleArray(question.answers);
+        });
+        return map;
+    }, [questions.data]);
 
     const handleAnswer = useCallback(async (question: Question, answerId: number) => {
         if (answerStates[question.id]?.selectedAnswerId) return;
@@ -501,7 +519,7 @@ export default function QuestionsIndex({
                                 {/* Question Text - uses negative margin to overlap image when not short_image */}
                                 {(question.image || question.image_custom) &&
                                 !question.is_short_image ? (
-                                    <div className="relative z-10 mx-0 -mt-[12%] mb-4 rounded bg-[#141414]/65 px-4 py-3">
+                                    <div className="relative z-1 mx-0 -mt-[12%] mb-4 rounded bg-[#141414]/65 px-4 py-3">
                                         <p className="text-center text-sm leading-snug font-medium text-white">
                                             {question.question}
                                         </p>
@@ -514,7 +532,7 @@ export default function QuestionsIndex({
 
                                 {/* Answer Options */}
                                 <div className="space-y-2">
-                                    {question.answers.map((answer) => (
+                                    {(shuffledAnswers[question.id] || question.answers).map((answer, answerIndex) => (
                                         <button
                                             key={answer.id}
                                             onClick={() =>
@@ -527,7 +545,7 @@ export default function QuestionsIndex({
                                             className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${getAnswerClassName(question, answer)}`}
                                         >
                                             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs">
-                                                {answer.position}
+                                                {answerIndex + 1}
                                             </span>
                                             <span className="text-sm">
                                                 {answer.text}
