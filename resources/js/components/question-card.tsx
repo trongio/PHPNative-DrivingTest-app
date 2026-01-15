@@ -1,10 +1,4 @@
-import {
-    Bookmark,
-    BookmarkCheck,
-    Check,
-    Info,
-    X,
-} from 'lucide-react';
+import { Bookmark, BookmarkCheck, Check, Info, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -72,12 +66,16 @@ export function QuestionCard({
     onInfoClick,
 }: QuestionCardProps) {
     const getAnswerClassName = (answer: Answer) => {
-        if (!answerState) return 'border-border hover:border-primary hover:bg-accent';
+        if (!answerState)
+            return 'border-border hover:border-primary hover:bg-accent';
 
         if (answer.id === answerState.correctAnswerId) {
             return 'border-green-500 bg-green-50 dark:bg-green-950';
         }
-        if (answer.id === answerState.selectedAnswerId && !answerState.isCorrect) {
+        if (
+            answer.id === answerState.selectedAnswerId &&
+            !answerState.isCorrect
+        ) {
             return 'border-red-500 bg-red-50 dark:bg-red-950';
         }
         return 'border-border opacity-50';
@@ -104,7 +102,8 @@ export function QuestionCard({
                                 <Bookmark className="h-5 w-5" />
                             )}
                         </Button>
-                        {(question.signs.length > 0 || question.description) && (
+                        {(question.signs.length > 0 ||
+                            question.description) && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -129,14 +128,15 @@ export function QuestionCard({
                 )}
 
                 {/* Question Text - uses negative margin to overlap image when not short_image */}
-                {(question.image || question.image_custom) && !question.is_short_image ? (
+                {(question.image || question.image_custom) &&
+                !question.is_short_image ? (
                     <div className="relative z-1 mx-0 -mt-[12%] mb-4 rounded bg-[#141414]/65 px-4 py-3">
-                        <p className="text-center text-sm font-medium leading-snug text-white">
+                        <p className="text-center text-sm leading-snug font-medium text-white">
                             {question.question}
                         </p>
                     </div>
                 ) : (
-                    <p className="mb-4 text-base font-medium leading-relaxed">
+                    <p className="mb-4 text-base leading-relaxed font-medium">
                         {question.question}
                     </p>
                 )}
@@ -168,7 +168,9 @@ export function QuestionCard({
                 {/* Explanation */}
                 {answerState?.explanation && (
                     <div className="mt-4 rounded-lg bg-muted p-3">
-                        <p className="text-sm text-muted-foreground">{answerState.explanation}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {answerState.explanation}
+                        </p>
                     </div>
                 )}
 

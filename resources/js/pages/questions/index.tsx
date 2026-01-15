@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { Check, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { QuestionCard } from '@/components/question-card';
 import { SignsInfoDialog } from '@/components/signs-info-dialog';
@@ -120,16 +120,44 @@ export default function QuestionsIndex({
     categories,
     filters,
 }: Props) {
-    const [answerStates, setAnswerStates] = useState<Record<number, AnswerState>>({});
-    const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Record<number, boolean>>(
+    const [answerStates, setAnswerStates] = useState<
+        Record<number, AnswerState>
+    >({});
+    const [bookmarkedQuestions, setBookmarkedQuestions] = useState<
+        Record<number, boolean>
+    >(
         Object.fromEntries(
-            Object.entries(userProgress).map(([qId, p]) => [qId, p.is_bookmarked])
-        )
+            Object.entries(userProgress).map(([qId, p]) => [
+                qId,
+                p.is_bookmarked,
+            ]),
+        ),
     );
     const [sessionScore, setSessionScore] = useState({ correct: 0, wrong: 0 });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
-    const [signsModalQuestion, setSignsModalQuestion] = useState<Question | null>(null);
+    const [signsModalQuestion, setSignsModalQuestion] =
+        useState<Question | null>(null);
+
+    // Handle Android back button to close filter sheet instead of navigating
+    useEffect(() => {
+        const handlePopState = (e: PopStateEvent) => {
+            if (isFilterOpen) {
+                e.preventDefault();
+                setIsFilterOpen(false);
+                // Re-push state to prevent actual navigation
+                window.history.pushState(null, '', window.location.href);
+            }
+        };
+
+        // Push initial state when filter opens
+        if (isFilterOpen) {
+            window.history.pushState(null, '', window.location.href);
+        }
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isFilterOpen]);
 
     // Shuffle answers once per page load while preserving correct answer tracking
     const shuffledAnswers = useMemo(() => {
@@ -149,48 +177,55 @@ export default function QuestionsIndex({
         return map;
     }, [questions.data]);
 
-    const handleAnswer = useCallback(async (question: Question, answerId: number) => {
-        if (answerStates[question.id]?.selectedAnswerId) return;
+    const handleAnswer = useCallback(
+        async (question: Question, answerId: number) => {
+            if (answerStates[question.id]?.selectedAnswerId) return;
 
-        try {
-            const response = await fetch(`/questions/${question.id}/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content || '',
-                },
-                body: JSON.stringify({ answer_id: answerId }),
-            });
+            try {
+                const response = await fetch(
+                    `/questions/${question.id}/answer`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN':
+                                document.querySelector<HTMLMetaElement>(
+                                    'meta[name="csrf-token"]',
+                                )?.content || '',
+                        },
+                        body: JSON.stringify({ answer_id: answerId }),
+                    },
+                );
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                setAnswerStates((prev) => ({
+                    ...prev,
+                    [question.id]: {
+                        questionId: question.id,
+                        selectedAnswerId: answerId,
+                        correctAnswerId: data.correct_answer_id,
+                        isCorrect: data.is_correct,
+                        explanation: data.explanation,
+                    },
+                }));
+
+                setSessionScore((prev) => ({
+                    correct: prev.correct + (data.is_correct ? 1 : 0),
+                    wrong: prev.wrong + (data.is_correct ? 0 : 1),
+                }));
+            } catch (error) {
+                console.error('Failed to submit answer:', error);
             }
-
-            const data = await response.json();
-
-            setAnswerStates((prev) => ({
-                ...prev,
-                [question.id]: {
-                    questionId: question.id,
-                    selectedAnswerId: answerId,
-                    correctAnswerId: data.correct_answer_id,
-                    isCorrect: data.is_correct,
-                    explanation: data.explanation,
-                },
-            }));
-
-            setSessionScore((prev) => ({
-                correct: prev.correct + (data.is_correct ? 1 : 0),
-                wrong: prev.wrong + (data.is_correct ? 0 : 1),
-            }));
-        } catch (error) {
-            console.error('Failed to submit answer:', error);
-        }
-    }, [answerStates]);
+        },
+        [answerStates],
+    );
 
     const handleBookmark = useCallback(async (questionId: number) => {
         try {
@@ -198,11 +233,12 @@ export default function QuestionsIndex({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content || '',
+                    'X-CSRF-TOKEN':
+                        document.querySelector<HTMLMetaElement>(
+                            'meta[name="csrf-token"]',
+                        )?.content || '',
                 },
             });
 
@@ -222,18 +258,22 @@ export default function QuestionsIndex({
 
     const applyFilters = useCallback(() => {
         setIsFilterOpen(false);
-        router.get('/questions', {
-            license_type: localFilters.license_type,
-            categories: localFilters.categories,
-            show_inactive: localFilters.show_inactive,
-            bookmarked: localFilters.bookmarked,
-            wrong_only: localFilters.wrong_only,
-            unanswered: localFilters.unanswered,
-            per_page: localFilters.per_page,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/questions',
+            {
+                license_type: localFilters.license_type,
+                categories: localFilters.categories,
+                show_inactive: localFilters.show_inactive,
+                bookmarked: localFilters.bookmarked,
+                wrong_only: localFilters.wrong_only,
+                unanswered: localFilters.unanswered,
+                per_page: localFilters.per_page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     }, [localFilters]);
 
     const resetFilters = useCallback(() => {
@@ -249,12 +289,19 @@ export default function QuestionsIndex({
         setLocalFilters(defaultFilters);
     }, []);
 
-    const goToPage = useCallback((page: number) => {
-        router.get('/questions', { ...filters, page }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }, [filters]);
+    const goToPage = useCallback(
+        (page: number) => {
+            router.get(
+                '/questions',
+                { ...filters, page },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        },
+        [filters],
+    );
 
     return (
         <MobileLayout>
@@ -280,21 +327,31 @@ export default function QuestionsIndex({
                             ფილტრი
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
-                        <SheetHeader>
-                            <SheetTitle>ფილტრები</SheetTitle>
+                    <SheetContent side="right" className="overflow-y-auto">
+                        <SheetHeader className="px-5">
+                            <SheetTitle className="text-xl">
+                                ფილტრები
+                            </SheetTitle>
                         </SheetHeader>
 
-                        <div className="mt-4 space-y-5 px-1">
+                        <div className="space-y-6 px-5 pb-6">
                             {/* License Type Filter */}
                             <div className="space-y-3">
-                                <Label className="mb-2 block text-base font-semibold">კატეგორია</Label>
+                                <Label className="mb-2 block text-base font-semibold">
+                                    კატეგორია
+                                </Label>
                                 <Select
-                                    value={localFilters.license_type?.toString() || 'all'}
+                                    value={
+                                        localFilters.license_type?.toString() ||
+                                        'all'
+                                    }
                                     onValueChange={(v) =>
                                         setLocalFilters((f) => ({
                                             ...f,
-                                            license_type: v === 'all' ? null : parseInt(v),
+                                            license_type:
+                                                v === 'all'
+                                                    ? null
+                                                    : parseInt(v),
                                         }))
                                     }
                                 >
@@ -302,9 +359,14 @@ export default function QuestionsIndex({
                                         <SelectValue placeholder="ყველა კატეგორია" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">ყველა კატეგორია</SelectItem>
+                                        <SelectItem value="all">
+                                            ყველა კატეგორია
+                                        </SelectItem>
                                         {licenseTypes.map((lt) => (
-                                            <SelectItem key={lt.id} value={lt.id.toString()}>
+                                            <SelectItem
+                                                key={lt.id}
+                                                value={lt.id.toString()}
+                                            >
                                                 {lt.code}
                                                 {lt.children.length > 0 &&
                                                     `, ${lt.children.map((c) => c.code).join(', ')}`}
@@ -316,11 +378,16 @@ export default function QuestionsIndex({
 
                             {/* Per Page */}
                             <div className="space-y-3">
-                                <Label className="mb-2 block text-base font-semibold">გვერდზე</Label>
+                                <Label className="mb-2 block text-base font-semibold">
+                                    გვერდზე
+                                </Label>
                                 <Select
                                     value={localFilters.per_page.toString()}
                                     onValueChange={(v) =>
-                                        setLocalFilters((f) => ({ ...f, per_page: parseInt(v) }))
+                                        setLocalFilters((f) => ({
+                                            ...f,
+                                            per_page: parseInt(v),
+                                        }))
                                     }
                                 >
                                     <SelectTrigger className="h-12 text-base">
@@ -328,7 +395,10 @@ export default function QuestionsIndex({
                                     </SelectTrigger>
                                     <SelectContent>
                                         {[10, 20, 50, 100].map((n) => (
-                                            <SelectItem key={n} value={n.toString()}>
+                                            <SelectItem
+                                                key={n}
+                                                value={n.toString()}
+                                            >
                                                 {n} კითხვა
                                             </SelectItem>
                                         ))}
@@ -338,7 +408,9 @@ export default function QuestionsIndex({
 
                             {/* Status Filters */}
                             <div className="space-y-3">
-                                <Label className="mb-2 block text-base font-semibold">სტატუსი</Label>
+                                <Label className="mb-2 block text-base font-semibold">
+                                    სტატუსი
+                                </Label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
@@ -350,7 +422,9 @@ export default function QuestionsIndex({
                                                 }))
                                             }
                                         />
-                                        <span className="text-sm">შენახული</span>
+                                        <span className="text-sm">
+                                            შენახული
+                                        </span>
                                     </label>
                                     <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
@@ -362,7 +436,9 @@ export default function QuestionsIndex({
                                                 }))
                                             }
                                         />
-                                        <span className="text-sm">შეცდომები</span>
+                                        <span className="text-sm">
+                                            შეცდომები
+                                        </span>
                                     </label>
                                     <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                         <Checkbox
@@ -386,7 +462,9 @@ export default function QuestionsIndex({
                                                 }))
                                             }
                                         />
-                                        <span className="text-sm">ამოღებული</span>
+                                        <span className="text-sm">
+                                            ამოღებული
+                                        </span>
                                     </label>
                                 </div>
                             </div>
@@ -394,7 +472,9 @@ export default function QuestionsIndex({
                             {/* Category Filter */}
                             <div className="space-y-3">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <Label className="text-base font-semibold">თემები</Label>
+                                    <Label className="text-base font-semibold">
+                                        თემები
+                                    </Label>
                                     <div className="flex gap-1">
                                         <Button
                                             variant="ghost"
@@ -403,7 +483,9 @@ export default function QuestionsIndex({
                                             onClick={() =>
                                                 setLocalFilters((f) => ({
                                                     ...f,
-                                                    categories: categories.map((c) => c.id),
+                                                    categories: categories.map(
+                                                        (c) => c.id,
+                                                    ),
                                                 }))
                                             }
                                         >
@@ -414,7 +496,10 @@ export default function QuestionsIndex({
                                             size="sm"
                                             className="h-8 px-2 text-xs"
                                             onClick={() =>
-                                                setLocalFilters((f) => ({ ...f, categories: [] }))
+                                                setLocalFilters((f) => ({
+                                                    ...f,
+                                                    categories: [],
+                                                }))
                                             }
                                         >
                                             გასუფთავება
@@ -423,21 +508,33 @@ export default function QuestionsIndex({
                                 </div>
                                 <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border p-2">
                                     {categories.map((cat) => (
-                                        <label key={cat.id} className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent">
+                                        <label
+                                            key={cat.id}
+                                            className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent"
+                                        >
                                             <Checkbox
-                                                checked={localFilters.categories.includes(cat.id)}
+                                                checked={localFilters.categories.includes(
+                                                    cat.id,
+                                                )}
                                                 onCheckedChange={(c) =>
                                                     setLocalFilters((f) => ({
                                                         ...f,
                                                         categories: c
-                                                            ? [...f.categories, cat.id]
+                                                            ? [
+                                                                  ...f.categories,
+                                                                  cat.id,
+                                                              ]
                                                             : f.categories.filter(
-                                                                  (id) => id !== cat.id
+                                                                  (id) =>
+                                                                      id !==
+                                                                      cat.id,
                                                               ),
                                                     }))
                                                 }
                                             />
-                                            <span className="text-sm">{cat.name}</span>
+                                            <span className="text-sm">
+                                                {cat.name}
+                                            </span>
                                         </label>
                                     ))}
                                 </div>
@@ -452,7 +549,10 @@ export default function QuestionsIndex({
                                 >
                                     გასუფთავება
                                 </Button>
-                                <Button className="h-12 flex-1 text-base" onClick={applyFilters}>
+                                <Button
+                                    className="h-12 flex-1 text-base"
+                                    onClick={applyFilters}
+                                >
                                     გამოყენება
                                 </Button>
                             </div>
@@ -467,8 +567,14 @@ export default function QuestionsIndex({
                     <QuestionCard
                         key={question.id}
                         question={question}
-                        questionNumber={(questions.current_page - 1) * questions.per_page + index + 1}
-                        shuffledAnswers={shuffledAnswers[question.id] || question.answers}
+                        questionNumber={
+                            (questions.current_page - 1) * questions.per_page +
+                            index +
+                            1
+                        }
+                        shuffledAnswers={
+                            shuffledAnswers[question.id] || question.answers
+                        }
                         answerState={answerStates[question.id]}
                         isBookmarked={bookmarkedQuestions[question.id] || false}
                         onAnswer={handleAnswer}
@@ -497,7 +603,9 @@ export default function QuestionsIndex({
                     <Button
                         variant="outline"
                         size="icon"
-                        disabled={questions.current_page === questions.last_page}
+                        disabled={
+                            questions.current_page === questions.last_page
+                        }
                         onClick={() => goToPage(questions.current_page + 1)}
                     >
                         <ChevronRight className="h-4 w-4" />

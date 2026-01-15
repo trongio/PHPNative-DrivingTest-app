@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { useState, useRef, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 
 interface User {
     id: number;
@@ -18,8 +18,12 @@ export default function UserSelection({ users }: Props) {
     const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Login form
-    const loginForm = useForm({
+    // Login form - include 'error' for general auth errors from Laravel
+    const loginForm = useForm<{
+        user_id: number;
+        password: string;
+        error?: string;
+    }>({
         user_id: 0,
         password: '',
     });
@@ -147,23 +151,34 @@ export default function UserSelection({ users }: Props) {
                             <input
                                 type="password"
                                 value={loginForm.data.password}
-                                onChange={(e) => loginForm.setData('password', e.target.value)}
+                                onChange={(e) =>
+                                    loginForm.setData(
+                                        'password',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="პაროლი"
                                 className="mb-3 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 autoFocus
                             />
                             {loginForm.errors.error && (
-                                <p className="mb-3 text-sm text-red-500">{loginForm.errors.error}</p>
+                                <p className="mb-3 text-sm text-red-500">
+                                    {loginForm.errors.error}
+                                </p>
                             )}
                             {loginForm.errors.password && (
-                                <p className="mb-3 text-sm text-red-500">{loginForm.errors.password}</p>
+                                <p className="mb-3 text-sm text-red-500">
+                                    {loginForm.errors.password}
+                                </p>
                             )}
                             <button
                                 type="submit"
                                 disabled={loginForm.processing}
                                 className="w-full rounded-xl bg-blue-500 py-3 font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
                             >
-                                {loginForm.processing ? 'იტვირთება...' : 'შესვლა'}
+                                {loginForm.processing
+                                    ? 'იტვირთება...'
+                                    : 'შესვლა'}
                             </button>
                         </form>
                     </div>
@@ -195,7 +210,9 @@ export default function UserSelection({ users }: Props) {
                             <div className="mb-4 flex justify-center">
                                 <button
                                     type="button"
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() =>
+                                        fileInputRef.current?.click()
+                                    }
                                     className="relative"
                                 >
                                     {newImagePreview ? (
@@ -206,10 +223,12 @@ export default function UserSelection({ users }: Props) {
                                         />
                                     ) : (
                                         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600">
-                                            <span className="text-3xl text-gray-400">+</span>
+                                            <span className="text-3xl text-gray-400">
+                                                +
+                                            </span>
                                         </div>
                                     )}
-                                    <div className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
+                                    <div className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
                                         <span className="text-sm">📷</span>
                                     </div>
                                 </button>
@@ -229,36 +248,53 @@ export default function UserSelection({ users }: Props) {
                             <input
                                 type="text"
                                 value={registerForm.data.name}
-                                onChange={(e) => registerForm.setData('name', e.target.value)}
+                                onChange={(e) =>
+                                    registerForm.setData('name', e.target.value)
+                                }
                                 placeholder="სახელი / მეტსახელი"
                                 className="mb-3 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 autoFocus
                             />
                             {registerForm.errors.name && (
-                                <p className="mb-3 text-sm text-red-500">{registerForm.errors.name}</p>
+                                <p className="mb-3 text-sm text-red-500">
+                                    {registerForm.errors.name}
+                                </p>
                             )}
 
                             {/* Password (optional) */}
                             <input
                                 type="password"
                                 value={registerForm.data.password}
-                                onChange={(e) => registerForm.setData('password', e.target.value)}
+                                onChange={(e) =>
+                                    registerForm.setData(
+                                        'password',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="პაროლი (არასავალდებულო)"
                                 className="mb-3 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             />
                             {registerForm.errors.password && (
-                                <p className="mb-3 text-sm text-red-500">{registerForm.errors.password}</p>
+                                <p className="mb-3 text-sm text-red-500">
+                                    {registerForm.errors.password}
+                                </p>
                             )}
                             <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                                პაროლი საჭიროა მხოლოდ თუ გსურთ თქვენი ანგარიშის დაცვა
+                                პაროლი საჭიროა მხოლოდ თუ გსურთ თქვენი ანგარიშის
+                                დაცვა
                             </p>
 
                             <button
                                 type="submit"
-                                disabled={registerForm.processing || !registerForm.data.name.trim()}
+                                disabled={
+                                    registerForm.processing ||
+                                    !registerForm.data.name.trim()
+                                }
                                 className="w-full rounded-xl bg-blue-500 py-3 font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
                             >
-                                {registerForm.processing ? 'იტვირთება...' : 'დაწყება'}
+                                {registerForm.processing
+                                    ? 'იტვირთება...'
+                                    : 'დაწყება'}
                             </button>
                         </form>
                     </div>
@@ -278,7 +314,9 @@ export default function UserSelection({ users }: Props) {
                         <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
                             მართვის მოწმობა
                         </h1>
-                        <p className="text-gray-600 dark:text-gray-400">აირჩიეთ მომხმარებელი</p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            აირჩიეთ მომხმარებელი
+                        </p>
                     </div>
 
                     {/* User Cards */}
@@ -307,7 +345,9 @@ export default function UserSelection({ users }: Props) {
                                         {user.name}
                                     </span>
                                     {user.has_password && (
-                                        <span className="mt-1 text-xs text-gray-500">🔒</span>
+                                        <span className="mt-1 text-xs text-gray-500">
+                                            🔒
+                                        </span>
                                     )}
                                 </button>
                             ))}

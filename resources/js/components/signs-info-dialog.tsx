@@ -21,7 +21,12 @@ interface SignsInfoDialogProps {
     signs: Sign[];
 }
 
-export function SignsInfoDialog({ open, onOpenChange, description, signs }: SignsInfoDialogProps) {
+export function SignsInfoDialog({
+    open,
+    onOpenChange,
+    description,
+    signs,
+}: SignsInfoDialogProps) {
     const [selectedSign, setSelectedSign] = useState<Sign | null>(null);
 
     const handleOpenChange = (newOpen: boolean) => {
