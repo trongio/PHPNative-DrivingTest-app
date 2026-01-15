@@ -8,6 +8,7 @@ import {
     Filter,
     Motorbike,
     Scooter,
+    Search,
     Shield,
     Tractor,
     TramFront,
@@ -20,8 +21,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { QuestionCard } from '@/components/question-card';
 import { SignsInfoDialog } from '@/components/signs-info-dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -170,7 +170,10 @@ const getLicenseTypeIcon = (code: string) => {
 };
 
 // Generate page numbers to display
-function getPageNumbers(currentPage: number, lastPage: number): (number | 'ellipsis')[] {
+function getPageNumbers(
+    currentPage: number,
+    lastPage: number,
+): (number | 'ellipsis')[] {
     const pages: (number | 'ellipsis')[] = [];
     const maxVisible = 5; // Max page buttons to show (excluding ellipsis)
 
@@ -244,20 +247,25 @@ function Pagination({
 
                 {pageNumbers.map((page, index) =>
                     page === 'ellipsis' ? (
-                        <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground">
+                        <span
+                            key={`ellipsis-${index}`}
+                            className="px-1 text-muted-foreground"
+                        >
                             ...
                         </span>
                     ) : (
                         <Button
                             key={page}
-                            variant={page === currentPage ? 'default' : 'outline'}
+                            variant={
+                                page === currentPage ? 'default' : 'outline'
+                            }
                             size="icon"
                             className="h-8 w-8 text-sm"
                             onClick={() => onPageChange(page)}
                         >
                             {page}
                         </Button>
-                    )
+                    ),
                 )}
 
                 <Button
@@ -313,6 +321,7 @@ export default function QuestionsIndex({
     );
     const [sessionScore, setSessionScore] = useState({ correct: 0, wrong: 0 });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [categorySearch, setCategorySearch] = useState('');
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
     const [signsModalQuestion, setSignsModalQuestion] =
         useState<Question | null>(null);
@@ -434,27 +443,6 @@ export default function QuestionsIndex({
         }
     }, []);
 
-    const applyFilters = useCallback(() => {
-        setIsFilterOpen(false);
-        router.get(
-            '/questions',
-            {
-                license_type: localFilters.license_type,
-                categories: localFilters.categories,
-                show_inactive: localFilters.show_inactive,
-                bookmarked: localFilters.bookmarked,
-                wrong_only: localFilters.wrong_only,
-                correct_only: localFilters.correct_only,
-                unanswered: localFilters.unanswered,
-                per_page: localFilters.per_page,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
-    }, [localFilters]);
-
     // Toggle inactive questions filter
     const toggleInactiveFilter = useCallback(() => {
         const newShowInactive = !localFilters.show_inactive;
@@ -487,20 +475,6 @@ export default function QuestionsIndex({
         [localFilters],
     );
 
-    const resetFilters = useCallback(() => {
-        const defaultFilters: Filters = {
-            license_type: null,
-            categories: [],
-            show_inactive: false,
-            bookmarked: false,
-            wrong_only: false,
-            correct_only: false,
-            unanswered: false,
-            per_page: 20,
-        };
-        setLocalFilters(defaultFilters);
-    }, []);
-
     const goToPage = useCallback(
         (page: number) => {
             router.get(
@@ -532,8 +506,20 @@ export default function QuestionsIndex({
 
     // Calculate total count for all categories
     const totalCategoryCount = useMemo(() => {
-        return Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
+        return Object.values(categoryCounts).reduce(
+            (sum, count) => sum + count,
+            0,
+        );
     }, [categoryCounts]);
+
+    // Filter categories by search term
+    const filteredCategories = useMemo(() => {
+        if (!categorySearch.trim()) return categories;
+        const searchLower = categorySearch.toLowerCase();
+        return categories.filter((cat) =>
+            cat.name.toLowerCase().includes(searchLower),
+        );
+    }, [categories, categorySearch]);
 
     return (
         <MobileLayout>
@@ -630,131 +616,181 @@ export default function QuestionsIndex({
                         </SelectContent>
                     </Select>
 
-                    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                    <Sheet
+                        open={isFilterOpen}
+                        onOpenChange={(open) => {
+                            setIsFilterOpen(open);
+                            if (!open) setCategorySearch('');
+                        }}
+                    >
                         <SheetTrigger asChild>
                             <Button variant="outline" size="sm">
                                 <Filter className="h-4 w-4" />
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="overflow-y-auto">
+                        <SheetContent
+                            side="right"
+                            className="flex flex-col overflow-hidden"
+                        >
                             <SheetHeader className="px-5">
                                 <SheetTitle className="text-xl">
-                                    ფილტრები
+                                    თემები
                                 </SheetTitle>
                             </SheetHeader>
 
-                            <div className="space-y-6 px-5 pb-6">
-                                {/* Category Filter */}
-                                <div className="space-y-3">
-                                    <div className="mb-2 flex items-center justify-between">
-                                        <Label className="text-base font-semibold">
-                                            თემები
-                                        </Label>
-                                        <div className="flex gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 px-2 text-xs"
-                                                onClick={() =>
-                                                    setLocalFilters((f) => ({
-                                                        ...f,
-                                                        categories: categories
-                                                            .filter(
-                                                                (c) =>
-                                                                    (categoryCounts[
-                                                                        c.id
-                                                                    ] || 0) > 0,
-                                                            )
-                                                            .map((c) => c.id),
-                                                    }))
-                                                }
-                                            >
-                                                ყველა ({totalCategoryCount})
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 px-2 text-xs"
-                                                onClick={() =>
-                                                    setLocalFilters((f) => ({
-                                                        ...f,
-                                                        categories: [],
-                                                    }))
-                                                }
-                                            >
-                                                გასუფთავება
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border p-2">
-                                        {categories.map((cat) => {
-                                            const count =
-                                                categoryCounts[cat.id] || 0;
-                                            return (
-                                                <label
-                                                    key={cat.id}
-                                                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-md p-2 transition-colors hover:bg-accent ${count === 0 ? 'opacity-50' : ''}`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <Checkbox
-                                                            checked={localFilters.categories.includes(
-                                                                cat.id,
-                                                            )}
-                                                            disabled={
-                                                                count === 0
-                                                            }
-                                                            onCheckedChange={(
-                                                                c,
-                                                            ) =>
-                                                                setLocalFilters(
-                                                                    (f) => ({
-                                                                        ...f,
-                                                                        categories:
-                                                                            c
-                                                                                ? [
-                                                                                      ...f.categories,
-                                                                                      cat.id,
-                                                                                  ]
-                                                                                : f.categories.filter(
-                                                                                      (
-                                                                                          id,
-                                                                                      ) =>
-                                                                                          id !==
-                                                                                          cat.id,
-                                                                                  ),
-                                                                    }),
-                                                                )
-                                                            }
-                                                        />
-                                                        <span className="text-sm">
-                                                            {cat.name}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {count}
-                                                    </span>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
+                            {/* Search Input */}
+                            <div className="px-5 pb-3">
+                                <div className="relative">
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        placeholder="ძებნა..."
+                                        value={categorySearch}
+                                        onChange={(e) =>
+                                            setCategorySearch(e.target.value)
+                                        }
+                                        className="pr-9 pl-9"
+                                    />
+                                    {categorySearch && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setCategorySearch('')
+                                            }
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
                                 </div>
+                            </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex gap-3 pt-2">
-                                    <Button
-                                        variant="outline"
-                                        className="h-12 flex-1 text-base"
-                                        onClick={resetFilters}
-                                    >
-                                        გასუფთავება
-                                    </Button>
-                                    <Button
-                                        className="h-12 flex-1 text-base"
-                                        onClick={applyFilters}
-                                    >
-                                        შენახვა
-                                    </Button>
-                                </div>
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 px-5 pb-3">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => {
+                                        const allCategories = categories
+                                            .filter(
+                                                (c) =>
+                                                    (categoryCounts[c.id] ||
+                                                        0) > 0,
+                                            )
+                                            .map((c) => c.id);
+                                        setLocalFilters((f) => ({
+                                            ...f,
+                                            categories: allCategories,
+                                        }));
+                                        router.get(
+                                            '/questions',
+                                            {
+                                                ...localFilters,
+                                                categories: allCategories,
+                                            },
+                                            {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            },
+                                        );
+                                        setIsFilterOpen(false);
+                                    }}
+                                >
+                                    ყველა ({totalCategoryCount})
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => {
+                                        setLocalFilters((f) => ({
+                                            ...f,
+                                            categories: [],
+                                        }));
+                                        router.get(
+                                            '/questions',
+                                            { ...localFilters, categories: [] },
+                                            {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            },
+                                        );
+                                        setIsFilterOpen(false);
+                                    }}
+                                >
+                                    გასუფთავება
+                                </Button>
+                            </div>
+
+                            {/* Category List */}
+                            <div className="flex-1 space-y-1 overflow-y-auto px-5 pb-6">
+                                {filteredCategories.map((cat) => {
+                                    const count = categoryCounts[cat.id] || 0;
+                                    const isSelected =
+                                        localFilters.categories.includes(
+                                            cat.id,
+                                        );
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            disabled={count === 0}
+                                            onClick={() => {
+                                                const newCategories = isSelected
+                                                    ? localFilters.categories.filter(
+                                                          (id) => id !== cat.id,
+                                                      )
+                                                    : [
+                                                          ...localFilters.categories,
+                                                          cat.id,
+                                                      ];
+                                                setLocalFilters((f) => ({
+                                                    ...f,
+                                                    categories: newCategories,
+                                                }));
+                                                router.get(
+                                                    '/questions',
+                                                    {
+                                                        ...localFilters,
+                                                        categories:
+                                                            newCategories,
+                                                    },
+                                                    {
+                                                        preserveState: true,
+                                                        preserveScroll: true,
+                                                    },
+                                                );
+                                                setIsFilterOpen(false);
+                                            }}
+                                            className={`flex w-full items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors ${
+                                                count === 0
+                                                    ? 'cursor-not-allowed opacity-40'
+                                                    : isSelected
+                                                      ? 'border-primary bg-primary/10'
+                                                      : 'hover:bg-accent'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
+                                                        isSelected
+                                                            ? 'border-primary bg-primary text-primary-foreground'
+                                                            : 'border-input'
+                                                    }`}
+                                                >
+                                                    {isSelected && (
+                                                        <Check className="h-3 w-3" />
+                                                    )}
+                                                </div>
+                                                <span className="text-base">
+                                                    {cat.name}
+                                                </span>
+                                            </div>
+                                            <span className="text-sm text-muted-foreground">
+                                                {count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </SheetContent>
                     </Sheet>

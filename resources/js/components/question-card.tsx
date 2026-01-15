@@ -98,10 +98,13 @@ export function QuestionCard({
                             #{questionNumber}
                         </span>
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            ID: {question.id}
                             {!question.is_active && (
                                 <TriangleAlert className="h-3.5 w-3.5 text-red-500" />
                             )}
-                            ID: {question.id}
+                            <span className="text-xs text-muted-foreground">
+                                {question.question_category.name}
+                            </span>
                         </span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -188,13 +191,6 @@ export function QuestionCard({
                         </p>
                     </div>
                 )}
-
-                {/* Category Tag */}
-                <div className="mt-4">
-                    <span className="text-xs text-muted-foreground">
-                        {question.question_category.name}
-                    </span>
-                </div>
             </CardContent>
         </Card>
     );
