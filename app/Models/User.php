@@ -24,6 +24,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_image',
+        'has_password',
     ];
 
     /**
@@ -49,7 +51,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'has_password' => 'boolean',
         ];
+    }
+
+    public function getProfileImageUrlAttribute(): ?string
+    {
+        if ($this->profile_image) {
+            return asset('storage/'.$this->profile_image);
+        }
+
+        return null;
     }
 
     public function questionProgress(): HasMany
