@@ -17,14 +17,49 @@ class QuestionBrowserController extends Controller
     {
         $user = $request->user();
 
-        // Get filter parameters
-        $licenseTypeId = $request->input('license_type');
-        $categoryIds = $request->input('categories', []);
-        $showInactive = $request->boolean('show_inactive', false);
-        $showBookmarked = $request->boolean('bookmarked', false);
-        $showWrong = $request->boolean('wrong_only', false);
-        $showUnanswered = $request->boolean('unanswered', false);
-        $perPage = $request->input('per_page', 20);
+        // Check if user has filter params in URL (not just page)
+        $hasFilterParams = $request->hasAny(['license_type', 'categories', 'show_inactive', 'bookmarked', 'wrong_only', 'unanswered', 'per_page']);
+
+        // Load saved preferences if no filter params provided
+        $savedPreferences = $user?->question_filter_preferences ?? [];
+
+        // Get filter parameters (use saved if no URL params)
+        $licenseTypeId = $hasFilterParams
+            ? $request->input('license_type')
+            : ($savedPreferences['license_type'] ?? null);
+        $categoryIds = $hasFilterParams
+            ? $request->input('categories', [])
+            : ($savedPreferences['categories'] ?? []);
+        $showInactive = $hasFilterParams
+            ? $request->boolean('show_inactive', false)
+            : ($savedPreferences['show_inactive'] ?? false);
+        $showBookmarked = $hasFilterParams
+            ? $request->boolean('bookmarked', false)
+            : ($savedPreferences['bookmarked'] ?? false);
+        $showWrong = $hasFilterParams
+            ? $request->boolean('wrong_only', false)
+            : ($savedPreferences['wrong_only'] ?? false);
+        $showUnanswered = $hasFilterParams
+            ? $request->boolean('unanswered', false)
+            : ($savedPreferences['unanswered'] ?? false);
+        $perPage = $hasFilterParams
+            ? $request->input('per_page', 20)
+            : ($savedPreferences['per_page'] ?? 20);
+
+        // Save preferences when user applies filters
+        if ($hasFilterParams && $user) {
+            $user->update([
+                'question_filter_preferences' => [
+                    'license_type' => $licenseTypeId,
+                    'categories' => $categoryIds,
+                    'show_inactive' => $showInactive,
+                    'bookmarked' => $showBookmarked,
+                    'wrong_only' => $showWrong,
+                    'unanswered' => $showUnanswered,
+                    'per_page' => (int) $perPage,
+                ],
+            ]);
+        }
 
         // Build query
         $query = Question::query()

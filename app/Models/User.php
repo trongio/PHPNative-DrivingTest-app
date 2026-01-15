@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'profile_image',
         'has_password',
+        'question_filter_preferences',
     ];
 
     /**
@@ -61,6 +62,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'has_password' => 'boolean',
+            'question_filter_preferences' => 'array',
         ];
     }
 
