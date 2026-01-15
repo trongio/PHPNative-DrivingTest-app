@@ -36,7 +36,7 @@ return new class extends Migration
     public function down(): void
     {
         // Clear all seeded data in reverse order
-        DB::table('question_license_type')->truncate();
+        DB::table('license_type_question')->truncate();
         DB::table('question_sign')->truncate();
         Answer::query()->delete();
         Question::query()->delete();
@@ -159,6 +159,18 @@ return new class extends Migration
                 'children' => [
                     ['code' => 'S', 'name' => 'თვითმავალი მანქანა'],
                 ],
+            ],
+            'Tram' => [
+                'name' => 'ტრამვაი',
+                'children' => [],
+            ],
+            'Mil' => [
+                'name' => 'სამხედრო',
+                'children' => [],
+            ],
+            'AM' => [
+                'name' => 'მოპედი',
+                'children' => [],
             ],
         ];
 

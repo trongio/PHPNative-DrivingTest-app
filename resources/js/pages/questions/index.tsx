@@ -1,5 +1,18 @@
 import { Head, router } from '@inertiajs/react';
-import { Check, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
+import {
+    Bike,
+    Bus,
+    Car,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    Filter,
+    Shield,
+    Tractor,
+    TramFront,
+    Truck,
+    X,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { QuestionCard } from '@/components/question-card';
@@ -101,6 +114,7 @@ interface Props {
     userProgress: Record<number, UserProgress>;
     licenseTypes: LicenseType[];
     categories: QuestionCategory[];
+    categoryCounts: Record<number, number>;
     filters: Filters;
     stats: Stats;
 }
@@ -113,11 +127,51 @@ interface AnswerState {
     explanation: string | null;
 }
 
+const getLicenseTypeIcon = (code: string) => {
+    const iconClass = 'h-4 w-4 shrink-0';
+    const upperCode = code.toUpperCase().replace(/\s/g, '');
+
+    // AM - Moped (before A check since AM starts with A)
+    if (upperCode === 'AM') {
+        return <Bike className={iconClass} />;
+    }
+    // A, A1 - Motorcycle
+    if (upperCode.startsWith('A')) {
+        return <Bike className={iconClass} />;
+    }
+    // B, B1 - Car
+    if (upperCode.startsWith('B')) {
+        return <Car className={iconClass} />;
+    }
+    // C, C1 - Truck
+    if (upperCode.startsWith('C')) {
+        return <Truck className={iconClass} />;
+    }
+    // D, D1 - Bus
+    if (upperCode.startsWith('D')) {
+        return <Bus className={iconClass} />;
+    }
+    // T, T,S - Tractor
+    if (upperCode === 'T' || upperCode === 'T,S' || upperCode === 'TS') {
+        return <Tractor className={iconClass} />;
+    }
+    // Tram
+    if (upperCode === 'TRAM') {
+        return <TramFront className={iconClass} />;
+    }
+    // Mil - Military
+    if (upperCode === 'MIL') {
+        return <Shield className={iconClass} />;
+    }
+    return <Car className={iconClass} />;
+};
+
 export default function QuestionsIndex({
     questions,
     userProgress,
     licenseTypes,
     categories,
+    categoryCounts,
     filters,
 }: Props) {
     const [answerStates, setAnswerStates] = useState<
@@ -308,7 +362,7 @@ export default function QuestionsIndex({
             <Head title="ბილეთები" />
 
             {/* Score Bar */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 py-2">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-background px-4 py-2">
                 <div className="flex items-center gap-4 text-sm">
                     <span className="text-green-600">
                         <Check className="mr-1 inline h-4 w-4" />
@@ -320,245 +374,287 @@ export default function QuestionsIndex({
                     </span>
                 </div>
 
-                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="outline" size="sm">
-                            <Filter className="mr-2 h-4 w-4" />
-                            ფილტრი
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right" className="overflow-y-auto">
-                        <SheetHeader className="px-5">
-                            <SheetTitle className="text-xl">
-                                ფილტრები
-                            </SheetTitle>
-                        </SheetHeader>
-
-                        <div className="space-y-6 px-5 pb-6">
-                            {/* License Type Filter */}
-                            <div className="space-y-3">
-                                <Label className="mb-2 block text-base font-semibold">
-                                    კატეგორია
-                                </Label>
-                                <Select
-                                    value={
-                                        localFilters.license_type?.toString() ||
-                                        'all'
-                                    }
-                                    onValueChange={(v) =>
-                                        setLocalFilters((f) => ({
-                                            ...f,
-                                            license_type:
-                                                v === 'all'
-                                                    ? null
-                                                    : parseInt(v),
-                                        }))
-                                    }
+                <div className="flex items-center gap-2">
+                    {/* License Type Selector */}
+                    <Select
+                        value={localFilters.license_type?.toString() || 'all'}
+                        onValueChange={(v) => {
+                            const newLicenseType =
+                                v === 'all' ? null : parseInt(v);
+                            setLocalFilters((f) => ({
+                                ...f,
+                                license_type: newLicenseType,
+                            }));
+                            // Immediately apply license type change
+                            router.get(
+                                '/questions',
+                                {
+                                    ...localFilters,
+                                    license_type: newLicenseType,
+                                },
+                                {
+                                    preserveState: true,
+                                    preserveScroll: true,
+                                },
+                            );
+                        }}
+                    >
+                        <SelectTrigger className="h-8 w-auto min-w-[80px] text-sm">
+                            <SelectValue placeholder="ყველა კატეგორია" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">ყველა კატეგორია</SelectItem>
+                            {licenseTypes.map((lt) => (
+                                <SelectItem
+                                    key={lt.id}
+                                    value={lt.id.toString()}
                                 >
-                                    <SelectTrigger className="h-12 text-base">
-                                        <SelectValue placeholder="ყველა კატეგორია" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            ყველა კატეგორია
-                                        </SelectItem>
-                                        {licenseTypes.map((lt) => (
-                                            <SelectItem
-                                                key={lt.id}
-                                                value={lt.id.toString()}
-                                            >
-                                                {lt.code}
-                                                {lt.children.length > 0 &&
-                                                    `, ${lt.children.map((c) => c.code).join(', ')}`}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Per Page */}
-                            <div className="space-y-3">
-                                <Label className="mb-2 block text-base font-semibold">
-                                    გვერდზე
-                                </Label>
-                                <Select
-                                    value={localFilters.per_page.toString()}
-                                    onValueChange={(v) =>
-                                        setLocalFilters((f) => ({
-                                            ...f,
-                                            per_page: parseInt(v),
-                                        }))
-                                    }
-                                >
-                                    <SelectTrigger className="h-12 text-base">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[10, 20, 50, 100].map((n) => (
-                                            <SelectItem
-                                                key={n}
-                                                value={n.toString()}
-                                            >
-                                                {n} კითხვა
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Status Filters */}
-                            <div className="space-y-3">
-                                <Label className="mb-2 block text-base font-semibold">
-                                    სტატუსი
-                                </Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
-                                        <Checkbox
-                                            checked={localFilters.bookmarked}
-                                            onCheckedChange={(c) =>
-                                                setLocalFilters((f) => ({
-                                                    ...f,
-                                                    bookmarked: c === true,
-                                                }))
-                                            }
-                                        />
-                                        <span className="text-sm">
-                                            შენახული
+                                    <span className="flex items-center gap-2">
+                                        {getLicenseTypeIcon(lt.code)}
+                                        <span>
+                                            {lt.code}
+                                            {lt.children.length > 0 &&
+                                                `, ${lt.children.map((c) => c.code).join(', ')}`}
                                         </span>
-                                    </label>
-                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
-                                        <Checkbox
-                                            checked={localFilters.wrong_only}
-                                            onCheckedChange={(c) =>
-                                                setLocalFilters((f) => ({
-                                                    ...f,
-                                                    wrong_only: c === true,
-                                                }))
-                                            }
-                                        />
-                                        <span className="text-sm">
-                                            შეცდომები
-                                        </span>
-                                    </label>
-                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
-                                        <Checkbox
-                                            checked={localFilters.unanswered}
-                                            onCheckedChange={(c) =>
-                                                setLocalFilters((f) => ({
-                                                    ...f,
-                                                    unanswered: c === true,
-                                                }))
-                                            }
-                                        />
-                                        <span className="text-sm">უპასუხო</span>
-                                    </label>
-                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
-                                        <Checkbox
-                                            checked={localFilters.show_inactive}
-                                            onCheckedChange={(c) =>
-                                                setLocalFilters((f) => ({
-                                                    ...f,
-                                                    show_inactive: c === true,
-                                                }))
-                                            }
-                                        />
-                                        <span className="text-sm">
-                                            ამოღებული
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
+                                    </span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
 
-                            {/* Category Filter */}
-                            <div className="space-y-3">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <Label className="text-base font-semibold">
-                                        თემები
+                    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <Filter className="h-4 w-4" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="overflow-y-auto">
+                            <SheetHeader className="px-5">
+                                <SheetTitle className="text-xl">
+                                    ფილტრები
+                                </SheetTitle>
+                            </SheetHeader>
+
+                            <div className="space-y-6 px-5 pb-6">
+                                {/* Per Page */}
+                                <div className="space-y-3">
+                                    <Label className="mb-2 block text-base font-semibold">
+                                        გვერდზე
                                     </Label>
-                                    <div className="flex gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 px-2 text-xs"
-                                            onClick={() =>
-                                                setLocalFilters((f) => ({
-                                                    ...f,
-                                                    categories: categories.map(
-                                                        (c) => c.id,
-                                                    ),
-                                                }))
-                                            }
-                                        >
-                                            ყველა
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 px-2 text-xs"
-                                            onClick={() =>
-                                                setLocalFilters((f) => ({
-                                                    ...f,
-                                                    categories: [],
-                                                }))
-                                            }
-                                        >
-                                            გასუფთავება
-                                        </Button>
-                                    </div>
+                                    <Select
+                                        value={localFilters.per_page.toString()}
+                                        onValueChange={(v) =>
+                                            setLocalFilters((f) => ({
+                                                ...f,
+                                                per_page: parseInt(v),
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger className="h-12 text-base">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {[10, 20, 50, 100].map((n) => (
+                                                <SelectItem
+                                                    key={n}
+                                                    value={n.toString()}
+                                                >
+                                                    {n} კითხვა
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border p-2">
-                                    {categories.map((cat) => (
-                                        <label
-                                            key={cat.id}
-                                            className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent"
-                                        >
+
+                                {/* Status Filters */}
+                                <div className="space-y-3">
+                                    <Label className="mb-2 block text-base font-semibold">
+                                        სტატუსი
+                                    </Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
                                             <Checkbox
-                                                checked={localFilters.categories.includes(
-                                                    cat.id,
-                                                )}
+                                                checked={
+                                                    localFilters.bookmarked
+                                                }
                                                 onCheckedChange={(c) =>
                                                     setLocalFilters((f) => ({
                                                         ...f,
-                                                        categories: c
-                                                            ? [
-                                                                  ...f.categories,
-                                                                  cat.id,
-                                                              ]
-                                                            : f.categories.filter(
-                                                                  (id) =>
-                                                                      id !==
-                                                                      cat.id,
-                                                              ),
+                                                        bookmarked: c === true,
                                                     }))
                                                 }
                                             />
                                             <span className="text-sm">
-                                                {cat.name}
+                                                შენახული
                                             </span>
                                         </label>
-                                    ))}
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
+                                            <Checkbox
+                                                checked={
+                                                    localFilters.wrong_only
+                                                }
+                                                onCheckedChange={(c) =>
+                                                    setLocalFilters((f) => ({
+                                                        ...f,
+                                                        wrong_only: c === true,
+                                                    }))
+                                                }
+                                            />
+                                            <span className="text-sm">
+                                                შეცდომები
+                                            </span>
+                                        </label>
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
+                                            <Checkbox
+                                                checked={
+                                                    localFilters.unanswered
+                                                }
+                                                onCheckedChange={(c) =>
+                                                    setLocalFilters((f) => ({
+                                                        ...f,
+                                                        unanswered: c === true,
+                                                    }))
+                                                }
+                                            />
+                                            <span className="text-sm">
+                                                უპასუხო
+                                            </span>
+                                        </label>
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent">
+                                            <Checkbox
+                                                checked={
+                                                    localFilters.show_inactive
+                                                }
+                                                onCheckedChange={(c) =>
+                                                    setLocalFilters((f) => ({
+                                                        ...f,
+                                                        show_inactive:
+                                                            c === true,
+                                                    }))
+                                                }
+                                            />
+                                            <span className="text-sm">
+                                                ამოღებული
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Category Filter */}
+                                <div className="space-y-3">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <Label className="text-base font-semibold">
+                                            თემები
+                                        </Label>
+                                        <div className="flex gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 px-2 text-xs"
+                                                onClick={() =>
+                                                    setLocalFilters((f) => ({
+                                                        ...f,
+                                                        categories: categories
+                                                            .filter(
+                                                                (c) =>
+                                                                    (categoryCounts[
+                                                                        c.id
+                                                                    ] || 0) > 0,
+                                                            )
+                                                            .map((c) => c.id),
+                                                    }))
+                                                }
+                                            >
+                                                ყველა
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 px-2 text-xs"
+                                                onClick={() =>
+                                                    setLocalFilters((f) => ({
+                                                        ...f,
+                                                        categories: [],
+                                                    }))
+                                                }
+                                            >
+                                                გასუფთავება
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border p-2">
+                                        {categories.map((cat) => {
+                                            const count =
+                                                categoryCounts[cat.id] || 0;
+                                            return (
+                                                <label
+                                                    key={cat.id}
+                                                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-md p-2 transition-colors hover:bg-accent ${count === 0 ? 'opacity-50' : ''}`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <Checkbox
+                                                            checked={localFilters.categories.includes(
+                                                                cat.id,
+                                                            )}
+                                                            disabled={
+                                                                count === 0
+                                                            }
+                                                            onCheckedChange={(
+                                                                c,
+                                                            ) =>
+                                                                setLocalFilters(
+                                                                    (f) => ({
+                                                                        ...f,
+                                                                        categories:
+                                                                            c
+                                                                                ? [
+                                                                                      ...f.categories,
+                                                                                      cat.id,
+                                                                                  ]
+                                                                                : f.categories.filter(
+                                                                                      (
+                                                                                          id,
+                                                                                      ) =>
+                                                                                          id !==
+                                                                                          cat.id,
+                                                                                  ),
+                                                                    }),
+                                                                )
+                                                            }
+                                                        />
+                                                        <span className="text-sm">
+                                                            {cat.name}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {count}
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-3 pt-2">
+                                    <Button
+                                        variant="outline"
+                                        className="h-12 flex-1 text-base"
+                                        onClick={resetFilters}
+                                    >
+                                        გასუფთავება
+                                    </Button>
+                                    <Button
+                                        className="h-12 flex-1 text-base"
+                                        onClick={applyFilters}
+                                    >
+                                        გამოყენება
+                                    </Button>
                                 </div>
                             </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-3 pt-2">
-                                <Button
-                                    variant="outline"
-                                    className="h-12 flex-1 text-base"
-                                    onClick={resetFilters}
-                                >
-                                    გასუფთავება
-                                </Button>
-                                <Button
-                                    className="h-12 flex-1 text-base"
-                                    onClick={applyFilters}
-                                >
-                                    გამოყენება
-                                </Button>
-                            </div>
-                        </div>
-                    </SheetContent>
-                </Sheet>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </div>
 
             {/* Questions List */}

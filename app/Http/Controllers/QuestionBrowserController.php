@@ -120,6 +120,27 @@ class QuestionBrowserController extends Controller
         $licenseTypes = LicenseType::parents()->with('children')->get();
         $categories = QuestionCategory::orderBy('id')->get();
 
+        // Get category counts based on license type filter
+        $categoryCountsQuery = Question::query();
+        if (! $showInactive) {
+            $categoryCountsQuery->where('is_active', true);
+        }
+        if ($licenseTypeId) {
+            $licenseType = LicenseType::find($licenseTypeId);
+            if ($licenseType) {
+                $licenseIds = collect([$licenseType->id]);
+                if ($licenseType->is_parent) {
+                    $licenseIds = $licenseIds->merge($licenseType->children->pluck('id'));
+                }
+                $categoryCountsQuery->whereHas('licenseTypes', fn ($q) => $q->whereIn('license_types.id', $licenseIds));
+            }
+        }
+        $categoryCounts = $categoryCountsQuery
+            ->selectRaw('question_category_id, count(*) as count')
+            ->groupBy('question_category_id')
+            ->pluck('count', 'question_category_id')
+            ->toArray();
+
         // Get total counts for stats
         $totalQuestions = Question::where('is_active', true)->count();
         $answeredCount = $user ? UserQuestionProgress::where('user_id', $user->id)->count() : 0;
@@ -129,6 +150,7 @@ class QuestionBrowserController extends Controller
             'userProgress' => $userProgress,
             'licenseTypes' => $licenseTypes,
             'categories' => $categories,
+            'categoryCounts' => $categoryCounts,
             'filters' => [
                 'license_type' => $licenseTypeId,
                 'categories' => $categoryIds,
