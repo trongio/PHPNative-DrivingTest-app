@@ -497,7 +497,9 @@ export default function UserSelection({ users }: Props) {
                                         }
                                         onChange={(e) => {
                                             if (isNative) {
-                                                setLoginPassword(e.target.value);
+                                                setLoginPassword(
+                                                    e.target.value,
+                                                );
                                             } else {
                                                 loginForm.setData(
                                                     'password',

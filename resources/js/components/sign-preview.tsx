@@ -60,7 +60,8 @@ export function SignPreview({
             if (sign) {
                 e.preventDefault();
                 // Set flag so mobile layout knows back was handled
-                (window as Window & { __backHandled?: boolean }).__backHandled = true;
+                (window as Window & { __backHandled?: boolean }).__backHandled =
+                    true;
                 onClose();
                 window.history.pushState(null, '', window.location.href);
             }

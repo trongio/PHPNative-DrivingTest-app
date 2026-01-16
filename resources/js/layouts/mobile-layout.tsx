@@ -7,7 +7,13 @@ import {
     ImageIcon,
     Settings,
 } from 'lucide-react';
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import {
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 
 import { SettingsSheet } from '@/components/settings-sheet';
 import { Button } from '@/components/ui/button';
@@ -171,8 +177,8 @@ export default function MobileLayout({
                 className={cn(
                     'pointer-events-none fixed inset-x-0 z-50 flex justify-center transition-all duration-300',
                     showExitToast
-                        ? 'opacity-100 translate-y-0'
-                        : 'opacity-0 translate-y-4',
+                        ? 'translate-y-0 opacity-100'
+                        : 'translate-y-4 opacity-0',
                 )}
                 style={{ bottom: 'calc(5rem + var(--inset-bottom, 0px))' }}
             >

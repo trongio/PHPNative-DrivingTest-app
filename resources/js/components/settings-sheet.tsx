@@ -565,7 +565,9 @@ function ProfileView({
                                         type="button"
                                         variant="ghost"
                                         className="mt-2 w-full"
-                                        onClick={() => setShowImagePicker(false)}
+                                        onClick={() =>
+                                            setShowImagePicker(false)
+                                        }
                                     >
                                         გაუქმება
                                     </Button>
