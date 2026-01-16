@@ -9,24 +9,24 @@ A fully offline NativePHP mobile application for Georgian driving license exam p
 ## 1. Core Architecture
 
 ### 1.1 Offline-First Design
-- [ ] App works 100% offline after initial installation
-- [ ] All questions, images, and signs stored locally in SQLite
-- [ ] No internet connection required for any functionality
-- [ ] Data persists across app restarts and updates
+- [x] App works 100% offline after initial installation
+- [x] All questions, images, and signs stored locally in SQLite
+- [x] No internet connection required for any functionality
+- [x] Data persists across app restarts and updates
 
 ### 1.2 Multi-User System
-- [ ] Support for multiple local user accounts on same device
-- [ ] Each user has their own:
+- [x] Support for multiple local user accounts on same device
+- [x] Each user has their own:
   - Test history
   - Saved questions
   - Statistics
   - Templates
   - Settings
-- [ ] Simple password protection (no 2FA needed)
-- [ ] User can only access their own account data
-- [ ] Account switching from login screen
-- [ ] Account creation/deletion managed by users themselves
-- [ ] No admin dashboard required
+- [x] Simple password protection (no 2FA needed)
+- [x] User can only access their own account data
+- [x] Account switching from login screen
+- [x] Account creation/deletion managed by users themselves
+- [x] No admin dashboard required
 
 ---
 
@@ -45,17 +45,17 @@ User interface shows **only parent licenses** for selection.
 | **T** | S | Tractors, self-propelled machines | Shared |
 
 ### 2.2 License Selection UX
-- [ ] User sees only parent categories (B, A, C, D, T)
-- [ ] Selecting parent automatically includes all children
-- [ ] Child categories inherit parent's question pool
-- [ ] Filter shows parent name (e.g., "B, B1" displayed together)
+- [x] User sees only parent categories (B, A, C, D, T)
+- [x] Selecting parent automatically includes all children
+- [x] Child categories inherit parent's question pool
+- [x] Filter shows parent name (e.g., "B, B1" displayed together)
 
 ### 2.3 Category Features
-- [ ] Separate question pools per parent category
+- [x] Separate question pools per parent category
 - [ ] Category-specific passing criteria
 - [ ] User can select preferred category in settings
-- [ ] Some questions shared across all categories (general rules)
-- [ ] Questions tagged with applicable license types
+- [x] Some questions shared across all categories (general rules)
+- [x] Questions tagged with applicable license types
 
 ---
 
@@ -79,49 +79,49 @@ The app organizes questions into **46 thematic categories** covering all aspects
 A dedicated section for browsing and learning road signs separately from test mode.
 
 ### 4.1 Sign Categories
-- [ ] **მაფრთხილებელი** - Warning signs
-- [ ] **პრიორიტეტი** - Priority signs
-- [ ] **ამკრძალავი** - Prohibition signs
-- [ ] **მიმთითებელი** - Directional signs
-- [ ] **განსაკუთრებული მითითების** - Special instruction signs
-- [ ] **სერვისის** - Service signs
-- [ ] **საინფორმაციო** - Informational signs
-- [ ] **დამატებითი ინფორმაცია** - Additional information plates
-- [ ] **საგზაო მონიშვნები** - Road markings
+- [x] **მაფრთხილებელი** - Warning signs
+- [x] **პრიორიტეტი** - Priority signs
+- [x] **ამკრძალავი** - Prohibition signs
+- [x] **მიმთითებელი** - Directional signs
+- [x] **განსაკუთრებული მითითების** - Special instruction signs
+- [x] **სერვისის** - Service signs
+- [x] **საინფორმაციო** - Informational signs
+- [x] **დამატებითი ინფორმაცია** - Additional information plates
+- [x] **საგზაო მონიშვნები** - Road markings
 
 ### 4.2 Sign Display
-- [ ] Grid view of all signs with images
-- [ ] Sign code number (e.g., 1.1, 1.2, 2.1)
-- [ ] Sign name in Georgian
-- [ ] Filter by category (tabs)
-- [ ] Total sign count display (e.g., "სულ 252 ნიშანი")
+- [x] Grid view of all signs with images
+- [x] Sign code number (e.g., 1.1, 1.2, 2.1)
+- [x] Sign name in Georgian
+- [x] Filter by category (tabs)
+- [x] Total sign count display (e.g., "სულ 252 ნიშანი")
 
 ### 4.3 Sign Details (Inline Expansion)
-- [ ] Tap/click sign to expand details inline (no page navigation)
-- [ ] Expanded view shows below the sign grid
-- [ ] Sign code and name as header (e.g., "2.1. მთავარი გზა")
-- [ ] Full description and meaning in Georgian
-- [ ] Usage rules and placement distances
-- [ ] Collapse by tapping again or tapping another sign
-- [ ] Link to related questions about this sign (optional)
+- [x] Tap/click sign to expand details inline (no page navigation)
+- [x] Expanded view shows below the sign grid
+- [x] Sign code and name as header (e.g., "2.1. მთავარი გზა")
+- [x] Full description and meaning in Georgian
+- [x] Usage rules and placement distances
+- [x] Collapse by tapping again or tapping another sign
+- [x] Link to related questions about this sign (optional)
 
 ### 4.4 Sign Search
-- [ ] Search signs by name
+- [x] Search signs by name
 - [ ] Search by sign code
-- [ ] Quick filter buttons
+- [x] Quick filter buttons
 
 ### 4.5 Category Information
-- [ ] Description text for each sign category
-- [ ] Distance information for warning signs
+- [x] Description text for each sign category
+- [x] Distance information for warning signs
 
 ### 4.6 Notes/Remarks Filter (შენიშვნა)
-- [ ] Clickable note buttons (შენიშვნა 1, შენიშვნა 2, etc.)
-- [ ] Clicking a note:
+- [x] Clickable note buttons (შენიშვნა 1, შენიშვნა 2, etc.)
+- [x] Clicking a note:
   - Displays the note text/comment
   - Filters sign grid to show only signs mentioned in that note
   - Shows filtered count (e.g., "პრიორიტეტი, 2 ნიშანი")
-- [ ] Toggle back to show all signs in category
-- [ ] Multiple notes per category where applicable
+- [x] Toggle back to show all signs in category
+- [x] Multiple notes per category where applicable
 
 ---
 
@@ -144,45 +144,45 @@ A dedicated section for browsing and learning road signs separately from test mo
 Browse and practice questions at your own pace without test pressure.
 
 #### 5.3.1 Browsing Interface
-- [ ] Browse all questions without timer
-- [ ] Score counter displayed in top-right corner (correct/wrong)
-- [ ] Answer questions and see correct answer immediately
-- [ ] Visual feedback: green for correct, red for wrong
-- [ ] View detailed explanations for each question
-- [ ] Expandable explanation section per question
+- [x] Browse all questions without timer
+- [x] Score counter displayed in top-right corner (correct/wrong)
+- [x] Answer questions and see correct answer immediately
+- [x] Visual feedback: green for correct, red for wrong
+- [x] View detailed explanations for each question
+- [x] Expandable explanation section per question
 
 #### 5.3.2 Filtering Options
-- [ ] **Filter by License Type**: Select parent category (B, A, C, D, T)
+- [x] **Filter by License Type**: Select parent category (B, A, C, D, T)
   - Shows "B, B1" format when B selected
-- [ ] **Filter by Question Categories**: Select one or multiple of 46 categories
-- [ ] **Filter by Active Status**: Toggle to include/exclude inactive questions
+- [x] **Filter by Question Categories**: Select one or multiple of 46 categories
+- [x] **Filter by Active Status**: Toggle to include/exclude inactive questions
   - Default: Show only active questions (is_active = true)
   - Option to show all questions (active + inactive)
   - Option to show only inactive questions (for review/learning)
   - Inactive questions visually distinguished (e.g., muted styling, badge)
-- [ ] **Select All / Deselect All** categories option
-- [ ] Filters can be combined (e.g., License B + Categories 45, 46 + Inactive)
-- [ ] Show question count matching current filters
-- [ ] Remember last used filters
+- [x] **Select All / Deselect All** categories option
+- [x] Filters can be combined (e.g., License B + Categories 45, 46 + Inactive)
+- [x] Show question count matching current filters
+- [x] Remember last used filters
 
 #### 5.3.3 Pagination
-- [ ] Configurable questions per page (10, 20, 50, 100)
-- [ ] Previous / Next page navigation
-- [ ] Page number indicator (e.g., "გვ. 1")
-- [ ] Jump to specific page
-- [ ] Total questions count display (e.g., "921 ბილეთი")
+- [x] Configurable questions per page (10, 20, 50, 100)
+- [x] Previous / Next page navigation
+- [x] Page number indicator (e.g., "გვ. 1")
+- [x] Jump to specific page
+- [x] Total questions count display (e.g., "921 ბილეთი")
 
 #### 5.3.4 Question Status Toggles
 - [ ] Toggle: Show/Hide already answered questions
-- [ ] Toggle: Show only questions answered wrong
-- [ ] Toggle: Show only bookmarked questions
+- [x] Toggle: Show only questions answered wrong (session-based)
+- [x] Toggle: Show only bookmarked questions
 - [ ] Counter showing answered vs total (e.g., "162 ამოხსნილი")
 - [ ] Mark questions as "learned" to hide them
 
 #### 5.3.5 Learning Mode Actions
-- [ ] Bookmark/Save question while browsing
-- [ ] View question explanation
-- [ ] Navigate between questions (Previous/Next)
+- [x] Bookmark/Save question while browsing
+- [x] View question explanation
+- [x] Navigate between questions (Previous/Next)
 - [ ] Reset session score
 - [ ] Switch to Test Mode with current filters
 
@@ -251,15 +251,15 @@ Browse and practice questions at your own pace without test pressure.
 ## 8. Question Saving & Bookmarks
 
 ### 8.1 Save Questions
-- [ ] Bookmark any question during test or learning mode
-- [ ] Quick save button on each question
+- [x] Bookmark any question during test or learning mode
+- [x] Quick save button on each question
 - [ ] Organize saved questions by category
 - [ ] Add personal notes to saved questions
 
 ### 8.2 Wrong Answer Tracking
-- [ ] Counter for each question: times answered wrong
-- [ ] Counter for times answered correctly
-- [ ] Accuracy percentage per question
+- [x] Counter for each question: times answered wrong
+- [x] Counter for times answered correctly
+- [x] Accuracy percentage per question (in database)
 - [ ] Sort saved questions by:
   - Most wrong answers
   - Recently added
@@ -267,8 +267,8 @@ Browse and practice questions at your own pace without test pressure.
   - Difficulty (based on wrong count)
 
 ### 8.3 Saved Questions Actions
-- [ ] Review saved questions list
-- [ ] Remove questions from saved
+- [x] Review saved questions list (via bookmarked filter)
+- [x] Remove questions from saved
 - [ ] Create custom test from saved questions
 - [ ] Clear wrong answer counter
 - [ ] Export saved questions (optional)
@@ -352,16 +352,16 @@ Each completed test saves:
 ## 11. User Interface
 
 ### 11.1 Main Navigation
-- [ ] Home/Dashboard
+- [x] Home/Dashboard
 - [ ] Test Modes
-- [ ] Learning Mode (Question Browser)
-- [ ] Road Signs Reference
-- [ ] Saved Questions
+- [x] Learning Mode (Question Browser)
+- [x] Road Signs Reference
+- [x] Saved Questions (via bookmarked filter)
 - [ ] History
 - [ ] Statistics
 - [ ] Templates
-- [ ] Settings
-- [ ] User Profile/Switch
+- [x] Settings
+- [x] User Profile/Switch
 
 ### 11.2 Test Interface
 - [ ] Question number indicator (e.g., 15/30)
@@ -370,25 +370,25 @@ Each completed test saves:
 - [ ] Progress bar
 - [ ] Current score
 - [ ] Wrong answer count vs allowed
-- [ ] Question image (when applicable)
-- [ ] Answer options (2-4 choices)
-- [ ] Navigation: Previous/Next/Skip
+- [x] Question image (when applicable)
+- [x] Answer options (2-4 choices)
+- [x] Navigation: Previous/Next/Skip
 - [ ] End test button
-- [ ] Bookmark/Save question button
+- [x] Bookmark/Save question button
 
 ### 11.3 Question Display
-- [ ] Clear question text
-- [ ] High-quality images for visual questions
-- [ ] Road signs displayed clearly
-- [ ] Answer options clearly numbered
-- [ ] Visual feedback on selection
-- [ ] Correct/Wrong indication after answer
+- [x] Clear question text
+- [x] High-quality images for visual questions
+- [x] Road signs displayed clearly
+- [x] Answer options clearly numbered
+- [x] Visual feedback on selection
+- [x] Correct/Wrong indication after answer
 
 ### 11.4 Theme & Accessibility
-- [ ] Light/Dark mode
+- [x] Light/Dark mode
 - [ ] Font size adjustment
 - [ ] High contrast mode (optional)
-- [ ] Georgian language interface
+- [x] Georgian language interface
 
 ---
 
@@ -404,15 +404,15 @@ Each completed test saves:
 - [ ] Vibration feedback on/off
 
 ### 12.2 Account Settings
-- [ ] Change password
-- [ ] Change display name
-- [ ] Delete account (with confirmation)
+- [x] Change password
+- [x] Change display name
+- [x] Delete account (with confirmation)
 - [ ] Export user data (optional)
 - [ ] Reset statistics
 
 ### 12.3 App Settings
-- [ ] Language (Georgian primary)
-- [ ] Theme (Light/Dark/System)
+- [x] Language (Georgian primary)
+- [x] Theme (Light/Dark/System)
 - [ ] Notification preferences
 - [ ] Data management (clear cache)
 
@@ -420,7 +420,9 @@ Each completed test saves:
 
 ## 13. Data Structure
 
-### 13.1 License Categories Table
+All database tables are implemented ✅
+
+### 13.1 License Categories Table ✅
 - License ID (primary key)
 - Code (e.g., "B", "B1", "A")
 - Name (Georgian)
@@ -428,7 +430,7 @@ Each completed test saves:
 - Description
 - Is Active
 
-### 13.2 Question Categories Table
+### 13.2 Question Categories Table ✅
 - Category ID (primary key)
 - Name (Georgian)
 - Name (English)
@@ -436,7 +438,7 @@ Each completed test saves:
 - Question Count (calculated)
 - Is Active
 
-### 13.3 Questions Table
+### 13.3 Questions Table ✅
 - Question ID (primary key)
 - Question text (Georgian)
 - Image path (nullable)
@@ -450,7 +452,7 @@ Each completed test saves:
 - Created at
 - Updated at
 
-### 13.4 User Accounts Table
+### 13.4 User Accounts Table ✅
 - User ID (primary key)
 - Username
 - Display Name
@@ -460,7 +462,7 @@ Each completed test saves:
 - Created at
 - Last login at
 
-### 13.5 User Question Progress Table
+### 13.5 User Question Progress Table ✅
 - Progress ID (primary key)
 - User ID (foreign key)
 - Question ID (foreign key)
@@ -473,7 +475,7 @@ Each completed test saves:
 - Last answered at
 - First answered at
 
-### 13.6 Test Templates Table
+### 13.6 Test Templates Table ✅
 - Template ID (primary key)
 - User ID (foreign key)
 - Name
@@ -486,7 +488,7 @@ Each completed test saves:
 - Created at
 - Updated at
 
-### 13.7 Test Results Table
+### 13.7 Test Results Table ✅
 - Test ID (primary key)
 - User ID (foreign key)
 - Template ID (nullable, foreign key)
@@ -504,7 +506,7 @@ Each completed test saves:
 - Time taken (seconds, can be negative)
 - Created at
 
-### 13.8 User Statistics Table (Aggregated)
+### 13.8 User Statistics Table (Aggregated) ✅
 - User ID (primary key, foreign key)
 - Total tests taken
 - Total tests passed
