@@ -551,15 +551,27 @@ All database tables are implemented ✅
 - SQLite local database
 
 ### 15.2 Performance
-- App launch < 2 seconds
-- Question load < 100ms
-- Smooth animations (60fps)
-- Minimal battery usage
+- [ ] App launch < 2 seconds
+- [ ] Question load < 100ms
+- [x] Smooth animations (60fps)
+- [ ] Minimal battery usage
 
 ### 15.3 Storage
-- All questions stored locally
-- Images optimized for mobile
-- Estimated app size: 50-100MB
+- [x] All questions stored locally
+- [x] Images optimized for mobile (WebP format, 50% quality)
+- [x] Estimated app size: ~25MB (images reduced from 49MB to 20.5MB)
+
+### 15.4 Performance Optimizations
+- [x] **Image Optimization**
+  - [x] WebP conversion (58% size reduction)
+  - [x] Lazy loading with `loading="lazy"` and `decoding="async"`
+  - [x] Skeleton placeholders with fade-in transitions
+  - [x] Artisan command for batch WebP conversion (`php artisan images:optimize`)
+- [x] **Caching**
+  - [x] Service Worker for image caching (cache-first strategy)
+  - [x] Inertia prefetching on navigation links (5-minute cache)
+- [x] **UI Performance**
+  - [x] Prevented keyboard auto-open on filter sheet
 
 ---
 
@@ -568,3 +580,4 @@ All database tables are implemented ✅
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1 | 2025-01-15 | Initial feature specification |
+| 0.2 | 2025-01-17 | Image optimization (WebP), caching, lazy loading, prefetching |
