@@ -127,7 +127,7 @@ export function SignsInfoDialog({
                     {imageCustom && (
                         <div className="overflow-hidden rounded-lg">
                             <img
-                                src={`/images/ticket_images_custom/${imageCustom}`}
+                                src={`/images/ticket_images_custom_webp/${imageCustom}`}
                                 alt="დამატებითი სურათი"
                                 className="w-full object-contain"
                             />

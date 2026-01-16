@@ -150,6 +150,8 @@ export default function MobileLayout({
                             <Link
                                 key={item.id}
                                 href={item.href}
+                                prefetch="mount"
+                                cacheFor="5m"
                                 className={cn(
                                     'flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs transition-colors',
                                     isActive

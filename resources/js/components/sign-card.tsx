@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { cn } from '@/lib/utils';
 
 interface SignCardProps {
@@ -11,6 +13,8 @@ interface SignCardProps {
 }
 
 export function SignCard({ sign, isSelected, onClick }: SignCardProps) {
+    const [imageLoaded, setImageLoaded] = useState(false);
+
     return (
         <button
             onClick={onClick}
@@ -22,11 +26,19 @@ export function SignCard({ sign, isSelected, onClick }: SignCardProps) {
             )}
         >
             <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted/50">
+                {!imageLoaded && (
+                    <div className="absolute inset-0 animate-pulse bg-muted" />
+                )}
                 <img
                     src={`/images/signs/${sign.image}`}
                     alt={sign.title}
                     loading="lazy"
-                    className="h-full w-full object-contain p-1"
+                    decoding="async"
+                    onLoad={() => setImageLoaded(true)}
+                    className={cn(
+                        'h-full w-full object-contain p-1 transition-opacity duration-200',
+                        imageLoaded ? 'opacity-100' : 'opacity-0',
+                    )}
                 />
             </div>
             <span className="line-clamp-2 w-full overflow-hidden text-center text-xs break-all text-muted-foreground">

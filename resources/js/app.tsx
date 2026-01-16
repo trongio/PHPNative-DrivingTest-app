@@ -1,11 +1,14 @@
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { config, createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { initializeTheme } from './hooks/use-appearance';
+
+// Cache prefetched pages for 5 minutes to improve navigation speed
+config.set('prefetch.cacheFor', '5m');
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -32,3 +35,10 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Register service worker for image caching
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+        // Service worker registration failed, images will load without caching
+    });
+}

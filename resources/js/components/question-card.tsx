@@ -1,8 +1,9 @@
 import { Bookmark, Check, Info, TriangleAlert, X } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface Answer {
     id: number;
@@ -68,6 +69,8 @@ export function QuestionCard({
     onBookmark,
     onInfoClick,
 }: QuestionCardProps) {
+    const [imageLoaded, setImageLoaded] = useState(false);
+
     // Shuffle answers deterministically based on seed + question.id
     const shuffledAnswers = useMemo(() => {
         const seededRandom = (seed: number) => {
@@ -153,11 +156,20 @@ export function QuestionCard({
 
                 {/* Question Image */}
                 {question.image && (
-                    <div className="relative mb-4 overflow-hidden rounded-lg">
+                    <div className="relative mb-4 overflow-hidden rounded-lg bg-muted">
+                        {!imageLoaded && (
+                            <div className="aspect-[16/10] w-full animate-pulse bg-muted" />
+                        )}
                         <img
-                            src={`/images/ticket_images/${question.image}`}
+                            src={`/images/ticket_images_webp/${question.image}`}
                             alt="კითხვის სურათი"
-                            className="w-full scale-[1.008] object-contain"
+                            loading="lazy"
+                            decoding="async"
+                            onLoad={() => setImageLoaded(true)}
+                            className={cn(
+                                'w-full scale-[1.008] object-contain transition-opacity duration-300',
+                                imageLoaded ? 'opacity-100' : 'opacity-0',
+                            )}
                         />
                     </div>
                 )}

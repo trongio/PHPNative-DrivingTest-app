@@ -49,6 +49,14 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
+    Route::get('test', function () {
+        return Inertia::render('test/index');
+    })->name('test.index');
+
+    Route::get('history', function () {
+        return Inertia::render('history/index');
+    })->name('history.index');
+
     // Question Browser
     Route::get('questions', [QuestionBrowserController::class, 'index'])->name('questions.index');
     Route::post('questions/{question}/answer', [QuestionBrowserController::class, 'answer'])->name('questions.answer');
