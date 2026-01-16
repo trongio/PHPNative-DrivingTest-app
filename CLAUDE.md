@@ -8,6 +8,7 @@ This is a **NativePHP Mobile Driving Test App** - a Laravel 12 application with 
 
 ## Git Commits
 
+- **Always ask before committing** - never commit without explicit user approval
 - Never include "Co-Authored-By: Claude" or any Claude attribution in commit messages
 - Keep commit messages concise and descriptive
 
