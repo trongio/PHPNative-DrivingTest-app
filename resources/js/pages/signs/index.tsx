@@ -477,7 +477,7 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                 </div>
 
                 {/* Signs Grid - extra bottom padding when info panel is open */}
-                <div className={cn('p-3', selectedSign && 'pb-72')}>
+                <div className={cn('p-3', selectedSign && 'pb-76')}>
                     {filteredSigns.length === 0 ? (
                         <div className="py-12 text-center">
                             <Search className="mx-auto h-12 w-12 text-muted-foreground/50" />

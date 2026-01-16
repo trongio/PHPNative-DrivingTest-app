@@ -197,7 +197,7 @@ export function SignPreview({
             </div>
 
             {/* Content - fixed height to prevent layout shifts */}
-            <div className="flex h-40 flex-col border-t px-4 pb-3">
+            <div className="flex h-42 flex-col border-t px-4 pb-3">
                 {/* Counter */}
                 <div className="flex shrink-0 items-center justify-between py-2">
                     <Badge variant="secondary" className="text-xs">
