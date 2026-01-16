@@ -16,4 +16,9 @@ class SignCategory extends Model
     {
         return $this->hasMany(Sign::class);
     }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(SignCategoryNote::class)->orderBy('position');
+    }
 }
