@@ -66,11 +66,30 @@ class UserSelectionController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:users,name'],
             'password' => ['nullable', 'string', 'min:4'],
             'profile_image' => ['nullable', 'image', 'max:2048'],
+            'profile_image_path' => ['nullable', 'string'], // NativePHP camera path
         ]);
 
         $profileImagePath = null;
+
+        // Handle file upload (web)
         if ($request->hasFile('profile_image')) {
             $profileImagePath = $request->file('profile_image')->store('profile-images', 'public');
+        }
+        // Handle NativePHP camera path (mobile)
+        elseif ($request->filled('profile_image_path')) {
+            $nativePath = $request->input('profile_image_path');
+
+            // Copy the native file to our storage
+            if (file_exists($nativePath)) {
+                $extension = pathinfo($nativePath, PATHINFO_EXTENSION) ?: 'jpg';
+                $filename = 'profile-images/'.uniqid().'.'.$extension;
+                $contents = file_get_contents($nativePath);
+
+                if ($contents !== false) {
+                    Storage::disk('public')->put($filename, $contents);
+                    $profileImagePath = $filename;
+                }
+            }
         }
 
         $user = User::create([

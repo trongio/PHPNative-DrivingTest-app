@@ -1,7 +1,9 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, Camera, Lock, Plus, User } from 'lucide-react';
+import { ArrowLeft, Camera, ImagePlus, Lock, Plus, User } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
+// NativePHP imports for camera access
+import { camera, Events, off, on } from '#nativephp';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +51,8 @@ export default function UserSelection({ users }: Props) {
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
+    const [showImagePicker, setShowImagePicker] = useState(false);
+    const [nativeImagePath, setNativeImagePath] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Login form - include 'error' for general auth errors from Laravel
@@ -94,6 +98,7 @@ export default function UserSelection({ users }: Props) {
         const file = e.target.files?.[0];
         if (file) {
             registerForm.setData('profile_image', file);
+            setNativeImagePath(null); // Clear native path when using file input
             const reader = new FileReader();
             reader.onloadend = () => {
                 setNewImagePreview(reader.result as string);
@@ -102,14 +107,80 @@ export default function UserSelection({ users }: Props) {
         }
     };
 
+    // Handle native camera photo capture
+    const handleTakePhoto = () => {
+        setShowImagePicker(false);
+        camera.getPhoto().id('profile-photo');
+    };
+
+    // Handle native gallery picker
+    const handlePickFromGallery = () => {
+        setShowImagePicker(false);
+        camera.pickImages().images().id('profile-gallery');
+    };
+
+    // Handle click on avatar - show native picker or file input
+    const handleAvatarClick = () => {
+        // Check if we're in a NativePHP environment by checking for the native bridge
+        const isNative =
+            typeof window !== 'undefined' &&
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (window as any).nativephp !== undefined;
+
+        if (isNative) {
+            setShowImagePicker(true);
+        } else {
+            fileInputRef.current?.click();
+        }
+    };
+
+    // Set up NativePHP event listeners for camera and gallery
+    useEffect(() => {
+        const handlePhotoTaken = (payload: { path: string }) => {
+            if (payload.path) {
+                setNativeImagePath(payload.path);
+                setNewImagePreview(payload.path);
+                registerForm.setData('profile_image', null); // Clear file when using native path
+            }
+        };
+
+        const handleMediaSelected = (payload: { paths: string[] }) => {
+            if (payload.paths && payload.paths.length > 0) {
+                const path = payload.paths[0];
+                setNativeImagePath(path);
+                setNewImagePreview(path);
+                registerForm.setData('profile_image', null); // Clear file when using native path
+            }
+        };
+
+        // Register event listeners
+        on(Events.Camera.PhotoTaken, handlePhotoTaken);
+        on(Events.Gallery.MediaSelected, handleMediaSelected);
+
+        // Cleanup on unmount
+        return () => {
+            off(Events.Camera.PhotoTaken, handlePhotoTaken);
+            off(Events.Gallery.MediaSelected, handleMediaSelected);
+        };
+    }, []);
+
     const handleCreateUser = (e: FormEvent) => {
         e.preventDefault();
-        // Use JSON for text-only submission, FormData only when image is selected
-        if (registerForm.data.profile_image) {
+
+        // If we have a native image path, send it as profile_image_path
+        if (nativeImagePath) {
+            router.post('/register', {
+                name: registerForm.data.name,
+                password: registerForm.data.password,
+                profile_image_path: nativeImagePath,
+            });
+        } else if (registerForm.data.profile_image) {
+            // Use FormData for file upload (web)
             registerForm.post('/register', {
                 forceFormData: true,
             });
         } else {
+            // JSON for text-only
             registerForm.post('/register');
         }
     };
@@ -118,6 +189,8 @@ export default function UserSelection({ users }: Props) {
         setIsCreating(false);
         registerForm.reset();
         setNewImagePreview(null);
+        setNativeImagePath(null);
+        setShowImagePicker(false);
     };
 
     const resetPasswordForm = () => {
@@ -263,9 +336,7 @@ export default function UserSelection({ users }: Props) {
                                 <div className="flex flex-col items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            fileInputRef.current?.click()
-                                        }
+                                        onClick={handleAvatarClick}
                                         className="relative"
                                     >
                                         <Avatar className="h-24 w-24">
@@ -293,6 +364,59 @@ export default function UserSelection({ users }: Props) {
                                     <p className="text-sm text-muted-foreground">
                                         დაამატეთ ფოტო (არასავალდებულო)
                                     </p>
+
+                                    {/* Native Image Picker Modal */}
+                                    {showImagePicker && (
+                                        <div
+                                            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4"
+                                            onClick={() =>
+                                                setShowImagePicker(false)
+                                            }
+                                        >
+                                            <div
+                                                className="w-full max-w-sm space-y-2 rounded-t-xl bg-background p-4 pb-8"
+                                                onClick={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                            >
+                                                <p className="mb-4 text-center text-sm text-muted-foreground">
+                                                    აირჩიეთ ფოტოს წყარო
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="w-full justify-start gap-3"
+                                                    onClick={handleTakePhoto}
+                                                >
+                                                    <Camera className="h-5 w-5" />
+                                                    გადაიღეთ ფოტო
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="w-full justify-start gap-3"
+                                                    onClick={
+                                                        handlePickFromGallery
+                                                    }
+                                                >
+                                                    <ImagePlus className="h-5 w-5" />
+                                                    აირჩიეთ გალერიიდან
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    className="mt-2 w-full"
+                                                    onClick={() =>
+                                                        setShowImagePicker(
+                                                            false,
+                                                        )
+                                                    }
+                                                >
+                                                    გაუქმება
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Name */}

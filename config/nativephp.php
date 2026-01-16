@@ -256,7 +256,7 @@ return [
 
     'permissions' => [
         'biometric' => false,
-        'camera' => false,
+        'camera' => 'We need camera access to take profile photos.',
         'microphone' => false,
         'microphone_background' => false,
         'push_notifications' => false,
