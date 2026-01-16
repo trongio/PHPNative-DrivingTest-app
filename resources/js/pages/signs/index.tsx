@@ -14,13 +14,14 @@ import {
     TrafficCone,
     X,
 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { SignCard } from '@/components/sign-card';
-import { SignDetailSheet } from '@/components/sign-detail-sheet';
+import { SignPreview } from '@/components/sign-preview';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import MobileLayout from '@/layouts/mobile-layout';
 import { cn } from '@/lib/utils';
 
@@ -134,7 +135,28 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
         null,
     );
     const [selectedSign, setSelectedSign] = useState<Sign | null>(null);
-    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const signRefs = useRef<Map<number, HTMLElement>>(new Map());
+    const { direction, isAtTop } = useScrollDirection({
+        threshold: 15,
+        containerRef: scrollContainerRef,
+    });
+
+    // Header should be visible when at top or scrolling up
+    const isHeaderVisible = isAtTop || direction === 'up';
+
+    // Scroll to selected sign
+    useEffect(() => {
+        if (selectedSign) {
+            const element = signRefs.current.get(selectedSign.id);
+            if (element) {
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                });
+            }
+        }
+    }, [selectedSign?.id]);
 
     // Get selected category
     const selectedCategory = useMemo(
@@ -147,14 +169,17 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
         let signs: Sign[] = [];
 
         if (selectedCategoryId) {
-            const category = categories.find((c) => c.id === selectedCategoryId);
+            const category = categories.find(
+                (c) => c.id === selectedCategoryId,
+            );
             if (category) {
                 if (
                     selectedNoteIndex !== null &&
                     category.notes[selectedNoteIndex]
                 ) {
                     // Filter by note's sign_ids
-                    const noteSignIds = category.notes[selectedNoteIndex].sign_ids;
+                    const noteSignIds =
+                        category.notes[selectedNoteIndex].sign_ids;
                     signs = category.signs.filter((s) =>
                         noteSignIds.includes(s.id),
                     );
@@ -174,7 +199,8 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                 (s) =>
                     s.title.toLowerCase().includes(query) ||
                     (s.title_en && s.title_en.toLowerCase().includes(query)) ||
-                    (s.description && s.description.toLowerCase().includes(query)),
+                    (s.description &&
+                        s.description.toLowerCase().includes(query)),
             );
         }
 
@@ -188,24 +214,37 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
 
     const handleSignClick = useCallback((sign: Sign) => {
         setSelectedSign(sign);
-        setIsDetailOpen(true);
+    }, []);
+
+    const handleSignClose = useCallback(() => {
+        setSelectedSign(null);
     }, []);
 
     // Get the category for the selected sign
     const selectedSignCategory = useMemo(() => {
         if (!selectedSign) return null;
-        return categories.find((c) =>
-            c.signs.some((s) => s.id === selectedSign.id),
-        ) || null;
+        return (
+            categories.find((c) =>
+                c.signs.some((s) => s.id === selectedSign.id),
+            ) || null
+        );
     }, [categories, selectedSign]);
 
     return (
         <MobileLayout title="ნიშნები">
             <Head title="საგზაო ნიშნები" />
 
-            <div className="flex flex-col">
-                {/* Sticky Header with Search */}
-                <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div
+                ref={scrollContainerRef}
+                className="flex h-full flex-col overflow-y-auto"
+            >
+                {/* Collapsible Header with Search */}
+                <div
+                    className={cn(
+                        'sticky top-0 z-10 border-b bg-background/95 backdrop-blur transition-all duration-300 ease-out supports-[backdrop-filter]:bg-background/60',
+                        !isHeaderVisible && '-translate-y-full opacity-0',
+                    )}
+                >
                     {/* Search Bar */}
                     <div className="p-3">
                         <div className="relative">
@@ -214,7 +253,7 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                                 placeholder="ნიშნის ძებნა..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9 pr-9"
+                                className="pr-9 pl-9"
                             />
                             {searchQuery && (
                                 <button
@@ -256,11 +295,15 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                                         <Button
                                             key={category.id}
                                             variant={
-                                                isSelected ? 'default' : 'outline'
+                                                isSelected
+                                                    ? 'default'
+                                                    : 'outline'
                                             }
                                             size="sm"
                                             onClick={() =>
-                                                handleCategorySelect(category.id)
+                                                handleCategorySelect(
+                                                    category.id,
+                                                )
                                             }
                                             className="gap-1.5"
                                         >
@@ -305,11 +348,15 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                                         <Button
                                             key={category.id}
                                             variant={
-                                                isSelected ? 'default' : 'outline'
+                                                isSelected
+                                                    ? 'default'
+                                                    : 'outline'
                                             }
                                             size="sm"
                                             onClick={() =>
-                                                handleCategorySelect(category.id)
+                                                handleCategorySelect(
+                                                    category.id,
+                                                )
                                             }
                                             className="gap-1.5"
                                         >
@@ -430,7 +477,7 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                 </div>
 
                 {/* Signs Grid */}
-                <div className="p-3">
+                <div className={cn('p-3', selectedSign && 'pb-32')}>
                     {filteredSigns.length === 0 ? (
                         <div className="py-12 text-center">
                             <Search className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -450,24 +497,37 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                     ) : (
                         <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
                             {filteredSigns.map((sign) => (
-                                <SignCard
+                                <div
                                     key={sign.id}
-                                    sign={sign}
-                                    isSelected={selectedSign?.id === sign.id}
-                                    onClick={() => handleSignClick(sign)}
-                                />
+                                    ref={(el) => {
+                                        if (el) {
+                                            signRefs.current.set(sign.id, el);
+                                        } else {
+                                            signRefs.current.delete(sign.id);
+                                        }
+                                    }}
+                                >
+                                    <SignCard
+                                        sign={sign}
+                                        isSelected={
+                                            selectedSign?.id === sign.id
+                                        }
+                                        onClick={() => handleSignClick(sign)}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Sign Detail Sheet */}
-            <SignDetailSheet
+            {/* Sign Preview */}
+            <SignPreview
                 sign={selectedSign}
                 category={selectedSignCategory}
-                open={isDetailOpen}
-                onOpenChange={setIsDetailOpen}
+                allSigns={filteredSigns}
+                onClose={handleSignClose}
+                onNavigate={handleSignClick}
             />
         </MobileLayout>
     );

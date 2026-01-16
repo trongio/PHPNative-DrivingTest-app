@@ -503,10 +503,14 @@ export default function QuestionsIndex({
 
         // Preserve session IDs for correct/wrong filters
         if (localFilters.correct_only && sessionCorrectIds.length > 0) {
-            Object.assign(requestParams, { session_correct_ids: sessionCorrectIds });
+            Object.assign(requestParams, {
+                session_correct_ids: sessionCorrectIds,
+            });
         }
         if (localFilters.wrong_only && sessionWrongIds.length > 0) {
-            Object.assign(requestParams, { session_wrong_ids: sessionWrongIds });
+            Object.assign(requestParams, {
+                session_wrong_ids: sessionWrongIds,
+            });
         }
 
         router.get('/questions', requestParams, {

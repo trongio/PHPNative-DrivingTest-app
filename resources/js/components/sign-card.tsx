@@ -17,7 +17,8 @@ export function SignCard({ sign, isSelected, onClick }: SignCardProps) {
             className={cn(
                 'flex flex-col items-center gap-1.5 rounded-lg border bg-card p-2 transition-all',
                 'hover:bg-accent hover:shadow-sm active:scale-95',
-                isSelected && 'border-primary bg-primary/5 ring-2 ring-primary/20',
+                isSelected &&
+                    'border-primary bg-primary/5 ring-2 ring-primary/20',
             )}
         >
             <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted/50">
@@ -28,7 +29,7 @@ export function SignCard({ sign, isSelected, onClick }: SignCardProps) {
                     className="h-full w-full object-contain p-1"
                 />
             </div>
-            <span className="line-clamp-2 w-full overflow-hidden text-center text-xs text-muted-foreground break-all">
+            <span className="line-clamp-2 w-full overflow-hidden text-center text-xs break-all text-muted-foreground">
                 {sign.title}
             </span>
         </button>
