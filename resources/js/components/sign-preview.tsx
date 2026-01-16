@@ -273,7 +273,7 @@ export function SignPreview({
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="shrink-0 py-2 text-xs text-muted-foreground"
+                        className="hidden shrink-0 py-2 text-xs text-muted-foreground"
                         onClick={() => setIsExpanded(false)}
                     >
                         დაკეცვა
