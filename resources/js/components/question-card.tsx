@@ -1,11 +1,4 @@
-import {
-    Bookmark,
-    BookmarkCheck,
-    Check,
-    Info,
-    TriangleAlert,
-    X,
-} from 'lucide-react';
+import { Bookmark, Check, Info, TriangleAlert, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -116,11 +109,13 @@ export function QuestionCard({
                             className="h-8 w-8"
                             onClick={() => onBookmark(question.id)}
                         >
-                            {isBookmarked ? (
-                                <BookmarkCheck className="h-5 w-5 text-yellow-500" />
-                            ) : (
-                                <Bookmark className="h-5 w-5" />
-                            )}
+                            <Bookmark
+                                className={`h-5 w-5 ${
+                                    isBookmarked
+                                        ? 'fill-yellow-500 text-yellow-500'
+                                        : ''
+                                }`}
+                            />
                         </Button>
                         {(question.signs.length > 0 ||
                             question.description ||
@@ -162,12 +157,16 @@ export function QuestionCard({
                 )}
 
                 {/* Answer Options */}
-                <div className={`space-y-2 ${isSubmitting ? 'pointer-events-none opacity-70' : ''}`}>
+                <div
+                    className={`space-y-2 ${isSubmitting ? 'pointer-events-none opacity-70' : ''}`}
+                >
                     {shuffledAnswers.map((answer, answerIndex) => (
                         <button
                             key={answer.id}
                             onClick={() => onAnswer(question, answer.id)}
-                            disabled={!!answerState?.selectedAnswerId || isSubmitting}
+                            disabled={
+                                !!answerState?.selectedAnswerId || isSubmitting
+                            }
                             className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${getAnswerClassName(answer)}`}
                         >
                             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs">

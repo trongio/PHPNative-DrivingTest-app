@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import {
+    Bookmark,
     Bus,
     Car,
     Check,
@@ -339,6 +340,18 @@ export default function QuestionsIndex({
         setLocalFilters(filters);
     }, [filters]);
 
+    // Sync bookmarkedQuestions with userProgress when page data changes
+    useEffect(() => {
+        setBookmarkedQuestions(
+            Object.fromEntries(
+                Object.entries(userProgress).map(([qId, p]) => [
+                    qId,
+                    p.is_bookmarked,
+                ]),
+            ),
+        );
+    }, [userProgress]);
+
     // Handle Android back button to close filter sheet instead of navigating
     useEffect(() => {
         const handlePopState = (e: PopStateEvent) => {
@@ -491,6 +504,32 @@ export default function QuestionsIndex({
         );
     }, [localFilters]);
 
+    // Toggle bookmarked questions filter
+    const toggleBookmarkFilter = useCallback(() => {
+        const newBookmarked = !localFilters.bookmarked;
+        setLocalFilters((f) => ({ ...f, bookmarked: newBookmarked }));
+
+        // Build request params, excluding bookmarked when false to avoid filtering issues
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { bookmarked: _bookmarked, ...restFilters } = localFilters;
+        const requestParams = newBookmarked
+            ? { ...restFilters, bookmarked: true }
+            : restFilters;
+
+        // Preserve session IDs for correct/wrong filters
+        if (localFilters.correct_only && sessionCorrectIds.length > 0) {
+            Object.assign(requestParams, { session_correct_ids: sessionCorrectIds });
+        }
+        if (localFilters.wrong_only && sessionWrongIds.length > 0) {
+            Object.assign(requestParams, { session_wrong_ids: sessionWrongIds });
+        }
+
+        router.get('/questions', requestParams, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, [localFilters, sessionCorrectIds, sessionWrongIds]);
+
     // Toggle answer status filter (correct/wrong) - only one can be active
     // Uses session-based IDs for filtering
     const toggleAnswerFilter = useCallback(
@@ -606,9 +645,25 @@ export default function QuestionsIndex({
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* Bookmarked Questions Toggle */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={toggleBookmarkFilter}
+                    >
+                        <Bookmark
+                            className={`h-4 w-4 ${
+                                localFilters.bookmarked
+                                    ? 'fill-yellow-500 text-yellow-500'
+                                    : 'text-muted-foreground'
+                            }`}
+                        />
+                    </Button>
+
                     {/* Inactive Questions Toggle */}
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         className="h-8 w-8"
                         onClick={toggleInactiveFilter}
