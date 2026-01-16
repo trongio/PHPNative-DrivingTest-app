@@ -197,7 +197,7 @@ export function SignPreview({
             </div>
 
             {/* Content - fixed height to prevent layout shifts */}
-            <div className="flex h-36 flex-col border-t px-4">
+            <div className="flex h-40 flex-col border-t px-4 pb-3">
                 {/* Counter */}
                 <div className="flex shrink-0 items-center justify-between py-2">
                     <Badge variant="secondary" className="text-xs">
@@ -208,9 +208,8 @@ export function SignPreview({
                     </span>
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="min-h-0 flex-1 overflow-y-auto pb-3">
-                    {/* Description */}
+                {/* Scrollable Description */}
+                <div className="min-h-0 flex-1 overflow-y-auto">
                     {sign.description && (
                         <div className="rounded-lg bg-muted/50 p-3">
                             <p className="text-sm text-muted-foreground">
@@ -218,30 +217,30 @@ export function SignPreview({
                             </p>
                         </div>
                     )}
-
-                    {/* Related Questions - only show when loaded and has questions */}
-                    {!isLoading &&
-                        relatedQuestionsCount !== null &&
-                        relatedQuestionsCount > 0 && (
-                            <Button
-                                asChild
-                                variant="outline"
-                                className="mt-3 w-full"
-                            >
-                                <Link
-                                    href={`/questions?sign_id=${sign.id}`}
-                                    className="flex items-center gap-2"
-                                >
-                                    <BookOpen className="h-4 w-4" />
-                                    <span>
-                                        დაკავშირებული კითხვები (
-                                        {relatedQuestionsCount})
-                                    </span>
-                                    <ExternalLink className="ml-auto h-4 w-4" />
-                                </Link>
-                            </Button>
-                        )}
                 </div>
+
+                {/* Related Questions - always visible at bottom when available */}
+                {!isLoading &&
+                    relatedQuestionsCount !== null &&
+                    relatedQuestionsCount > 0 && (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="mt-2 w-full shrink-0"
+                        >
+                            <Link
+                                href={`/questions?sign_id=${sign.id}`}
+                                className="flex items-center gap-2"
+                            >
+                                <BookOpen className="h-4 w-4" />
+                                <span>
+                                    დაკავშირებული კითხვები (
+                                    {relatedQuestionsCount})
+                                </span>
+                                <ExternalLink className="ml-auto h-4 w-4" />
+                            </Link>
+                        </Button>
+                    )}
             </div>
         </div>
     );
