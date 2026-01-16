@@ -136,6 +136,7 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
     );
     const [selectedSign, setSelectedSign] = useState<Sign | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const headerRef = useRef<HTMLDivElement>(null);
     const signRefs = useRef<Map<number, HTMLElement>>(new Map());
     const { direction, isAtTop } = useScrollDirection({
         threshold: 15,
@@ -145,14 +146,36 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
     // Header should be visible when at top or scrolling up
     const isHeaderVisible = isAtTop || direction === 'up';
 
-    // Scroll to selected sign
+    // Scroll to selected sign - position it in visible area between header and info panel
     useEffect(() => {
-        if (selectedSign) {
+        if (selectedSign && scrollContainerRef.current) {
             const element = signRefs.current.get(selectedSign.id);
             if (element) {
-                element.scrollIntoView({
+                const container = scrollContainerRef.current;
+                const elementRect = element.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+
+                // Get header height (if visible, it affects the visible area)
+                const headerHeight = headerRef.current?.offsetHeight || 0;
+
+                // Info panel height: header ~80px + content h-70 280px = ~360px
+                const infoPanelHeight = 360;
+
+                // Calculate visible area (between header and info panel)
+                const visibleHeight =
+                    containerRect.height - infoPanelHeight - headerHeight;
+
+                // Calculate where we want the element (centered in visible area, offset by header)
+                const targetScrollTop =
+                    container.scrollTop +
+                    (elementRect.top - containerRect.top) -
+                    headerHeight -
+                    visibleHeight / 2 +
+                    elementRect.height / 2;
+
+                container.scrollTo({
+                    top: Math.max(0, targetScrollTop),
                     behavior: 'smooth',
-                    block: 'center',
                 });
             }
         }
@@ -240,6 +263,7 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
             >
                 {/* Collapsible Header with Search */}
                 <div
+                    ref={headerRef}
                     className={cn(
                         'sticky top-0 z-10 border-b bg-background/95 backdrop-blur transition-all duration-300 ease-out supports-[backdrop-filter]:bg-background/60',
                         !isHeaderVisible && '-translate-y-full opacity-0',
