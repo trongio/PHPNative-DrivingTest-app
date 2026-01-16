@@ -182,15 +182,12 @@ export function SignPreview({
 
                 {/* Sign Info */}
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{sign.title}</p>
+                    <p className="line-clamp-2 text-sm font-medium leading-tight">
+                        {sign.title}
+                    </p>
                     {sign.title_en && (
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
                             {sign.title_en}
-                        </p>
-                    )}
-                    {!isExpanded && (
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                            შეეხეთ მეტის სანახავად
                         </p>
                     )}
                 </div>
