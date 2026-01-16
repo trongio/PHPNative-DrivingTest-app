@@ -477,7 +477,7 @@ export default function SignsIndex({ categories, totalSigns }: Props) {
                 </div>
 
                 {/* Signs Grid */}
-                <div className={cn('p-3', selectedSign && 'pb-32')}>
+                <div className={cn('p-3', selectedSign && 'pb-80')}>
                     {filteredSigns.length === 0 ? (
                         <div className="py-12 text-center">
                             <Search className="mx-auto h-12 w-12 text-muted-foreground/50" />

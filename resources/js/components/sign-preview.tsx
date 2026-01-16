@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface Sign {
     id: number;
@@ -42,7 +41,6 @@ export function SignPreview({
     onClose,
     onNavigate,
 }: SignPreviewProps) {
-    const [isExpanded, setIsExpanded] = useState(true);
     const [relatedQuestionsCount, setRelatedQuestionsCount] = useState<
         number | null
     >(null);
@@ -56,16 +54,12 @@ export function SignPreview({
     const hasPrev = currentIndex > 0;
     const hasNext = currentIndex < allSigns.length - 1 && currentIndex !== -1;
 
-    // Handle Android back button
+    // Handle Android back button - close preview on first press
     useEffect(() => {
         const handlePopState = (e: PopStateEvent) => {
             if (sign) {
                 e.preventDefault();
-                if (isExpanded) {
-                    setIsExpanded(false);
-                } else {
-                    onClose();
-                }
+                onClose();
                 window.history.pushState(null, '', window.location.href);
             }
         };
@@ -76,7 +70,7 @@ export function SignPreview({
 
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, [sign, isExpanded, onClose]);
+    }, [sign, onClose]);
 
     // Fetch related questions when expanded
     const fetchRelatedQuestions = useCallback(async (signId: number) => {
@@ -100,7 +94,7 @@ export function SignPreview({
     }, []);
 
     useEffect(() => {
-        if (sign && isExpanded) {
+        if (sign) {
             fetchRelatedQuestions(sign.id);
         } else {
             setRelatedQuestionsCount(null);
@@ -109,7 +103,7 @@ export function SignPreview({
         return () => {
             abortControllerRef.current?.abort();
         };
-    }, [sign, isExpanded, fetchRelatedQuestions]);
+    }, [sign, fetchRelatedQuestions]);
 
     // Navigation handlers
     const handlePrev = useCallback(() => {
@@ -141,29 +135,17 @@ export function SignPreview({
 
     return (
         <div
-            className={cn(
-                'fixed inset-x-0 bottom-0 z-50 bg-background shadow-[0_-4px_20px_rgba(0,0,0,0.15)] transition-all duration-300 ease-out dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]',
-                isExpanded ? 'h-72 rounded-t-2xl' : 'h-20 rounded-t-xl',
-            )}
-            style={{ paddingBottom: 'var(--inset-bottom, 0px)' }}
+            className="fixed inset-x-0 z-40 rounded-t-2xl bg-background shadow-[0_-4px_20px_rgba(0,0,0,0.15)] transition-all duration-300 ease-out dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+            style={{ bottom: 'calc(4rem + var(--inset-bottom, 0px))' }}
         >
-            {/* Compact Preview */}
-            <div
-                className={cn(
-                    'flex items-center gap-3 p-3',
-                    !isExpanded && 'cursor-pointer',
-                )}
-                onClick={() => !isExpanded && setIsExpanded(true)}
-            >
+            {/* Header with navigation */}
+            <div className="flex items-center gap-3 p-3">
                 {/* Navigation - Previous */}
                 <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handlePrev();
-                    }}
+                    onClick={handlePrev}
                     disabled={!hasPrev}
                 >
                     <ChevronLeft className="h-5 w-5" />
@@ -195,10 +177,7 @@ export function SignPreview({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleNext();
-                    }}
+                    onClick={handleNext}
                     disabled={!hasNext}
                 >
                     <ChevronRight className="h-5 w-5" />
@@ -209,75 +188,60 @@ export function SignPreview({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onClose();
-                    }}
+                    onClick={onClose}
                 >
                     <X className="h-5 w-5" />
                 </Button>
             </div>
 
-            {/* Expanded Content */}
-            {isExpanded && (
-                <div className="flex h-[calc(100%-5rem)] flex-col border-t px-4">
-                    {/* Counter */}
-                    <div className="flex shrink-0 items-center justify-between py-2">
-                        <Badge variant="secondary" className="text-xs">
-                            {category.name}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                            {currentIndex + 1} / {allSigns.length}
-                        </span>
-                    </div>
-
-                    {/* Scrollable Content */}
-                    <div className="min-h-0 flex-1 overflow-y-auto">
-                        {/* Description */}
-                        {sign.description && (
-                            <div className="rounded-lg bg-muted/50 p-3">
-                                <p className="text-sm text-muted-foreground">
-                                    {sign.description}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Related Questions */}
-                        {isLoading ? (
-                            <div className="mt-3 h-10 animate-pulse rounded-lg bg-muted" />
-                        ) : relatedQuestionsCount !== null &&
-                          relatedQuestionsCount > 0 ? (
-                            <Button
-                                asChild
-                                variant="outline"
-                                className="mt-3 w-full"
-                            >
-                                <Link
-                                    href={`/questions?sign_id=${sign.id}`}
-                                    className="flex items-center gap-2"
-                                >
-                                    <BookOpen className="h-4 w-4" />
-                                    <span>
-                                        დაკავშირებული კითხვები (
-                                        {relatedQuestionsCount})
-                                    </span>
-                                    <ExternalLink className="ml-auto h-4 w-4" />
-                                </Link>
-                            </Button>
-                        ) : null}
-                    </div>
-
-                    {/* Collapse Button */}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hidden shrink-0 py-2 text-xs text-muted-foreground"
-                        onClick={() => setIsExpanded(false)}
-                    >
-                        დაკეცვა
-                    </Button>
+            {/* Content */}
+            <div className="flex max-h-48 flex-col border-t px-4">
+                {/* Counter */}
+                <div className="flex shrink-0 items-center justify-between py-2">
+                    <Badge variant="secondary" className="text-xs">
+                        {category.name}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                        {currentIndex + 1} / {allSigns.length}
+                    </span>
                 </div>
-            )}
+
+                {/* Scrollable Content */}
+                <div className="min-h-0 flex-1 overflow-y-auto pb-3">
+                    {/* Description */}
+                    {sign.description && (
+                        <div className="rounded-lg bg-muted/50 p-3">
+                            <p className="text-sm text-muted-foreground">
+                                {sign.description}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Related Questions */}
+                    {isLoading ? (
+                        <div className="mt-3 h-10 animate-pulse rounded-lg bg-muted" />
+                    ) : relatedQuestionsCount !== null &&
+                      relatedQuestionsCount > 0 ? (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="mt-3 w-full"
+                        >
+                            <Link
+                                href={`/questions?sign_id=${sign.id}`}
+                                className="flex items-center gap-2"
+                            >
+                                <BookOpen className="h-4 w-4" />
+                                <span>
+                                    დაკავშირებული კითხვები (
+                                    {relatedQuestionsCount})
+                                </span>
+                                <ExternalLink className="ml-auto h-4 w-4" />
+                            </Link>
+                        </Button>
+                    ) : null}
+                </div>
+            </div>
         </div>
     );
 }
