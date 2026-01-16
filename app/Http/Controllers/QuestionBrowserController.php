@@ -37,8 +37,11 @@ class QuestionBrowserController extends Controller
             ? $request->boolean('bookmarked', false)
             : ($savedPreferences['bookmarked'] ?? false);
         // correct_only and wrong_only are session-only filters (not saved to preferences)
+        // These use session IDs passed from frontend, not database progress
         $showCorrect = $request->boolean('correct_only', false);
         $showWrong = $request->boolean('wrong_only', false);
+        $sessionCorrectIds = collect($request->input('session_correct_ids', []))->map(fn ($id) => (int) $id)->toArray();
+        $sessionWrongIds = collect($request->input('session_wrong_ids', []))->map(fn ($id) => (int) $id)->toArray();
         $showUnanswered = $hasFilterParams
             ? $request->boolean('unanswered', false)
             : ($savedPreferences['unanswered'] ?? false);
@@ -87,17 +90,26 @@ class QuestionBrowserController extends Controller
             $query->whereIn('question_category_id', $categoryIds);
         }
 
-        // Filter by user progress (bookmarked, correct, wrong, unanswered)
-        if ($user && ($showBookmarked || $showCorrect || $showWrong || $showUnanswered)) {
-            $query->where(function ($q) use ($user, $showBookmarked, $showCorrect, $showWrong, $showUnanswered) {
+        // Filter by session-based correct/wrong IDs (passed from frontend)
+        if ($showCorrect && ! empty($sessionCorrectIds)) {
+            $query->whereIn('id', $sessionCorrectIds);
+        } elseif ($showCorrect) {
+            // No correct answers in session, return empty
+            $query->whereRaw('1 = 0');
+        }
+
+        if ($showWrong && ! empty($sessionWrongIds)) {
+            $query->whereIn('id', $sessionWrongIds);
+        } elseif ($showWrong) {
+            // No wrong answers in session, return empty
+            $query->whereRaw('1 = 0');
+        }
+
+        // Filter by user progress (bookmarked, unanswered) - these still use database
+        if ($user && ($showBookmarked || $showUnanswered)) {
+            $query->where(function ($q) use ($user, $showBookmarked, $showUnanswered) {
                 if ($showBookmarked) {
                     $q->orWhereHas('userProgress', fn ($uq) => $uq->where('user_id', $user->id)->where('is_bookmarked', true));
-                }
-                if ($showCorrect) {
-                    $q->orWhereHas('userProgress', fn ($uq) => $uq->where('user_id', $user->id)->whereColumn('times_correct', '>', 'times_wrong'));
-                }
-                if ($showWrong) {
-                    $q->orWhereHas('userProgress', fn ($uq) => $uq->where('user_id', $user->id)->whereColumn('times_wrong', '>', 'times_correct'));
                 }
                 if ($showUnanswered) {
                     $q->orWhereDoesntHave('userProgress', fn ($uq) => $uq->where('user_id', $user->id));

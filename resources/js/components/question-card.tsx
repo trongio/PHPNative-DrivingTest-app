@@ -57,6 +57,7 @@ interface QuestionCardProps {
     shuffledAnswers: Answer[];
     answerState?: AnswerState;
     isBookmarked: boolean;
+    isSubmitting?: boolean;
     onAnswer: (question: Question, answerId: number) => void;
     onBookmark: (questionId: number) => void;
     onInfoClick: (question: Question) => void;
@@ -68,6 +69,7 @@ export function QuestionCard({
     shuffledAnswers,
     answerState,
     isBookmarked,
+    isSubmitting = false,
     onAnswer,
     onBookmark,
     onInfoClick,
@@ -160,12 +162,12 @@ export function QuestionCard({
                 )}
 
                 {/* Answer Options */}
-                <div className="space-y-2">
+                <div className={`space-y-2 ${isSubmitting ? 'pointer-events-none opacity-70' : ''}`}>
                     {shuffledAnswers.map((answer, answerIndex) => (
                         <button
                             key={answer.id}
                             onClick={() => onAnswer(question, answer.id)}
-                            disabled={!!answerState?.selectedAnswerId}
+                            disabled={!!answerState?.selectedAnswerId || isSubmitting}
                             className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${getAnswerClassName(answer)}`}
                         >
                             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs">

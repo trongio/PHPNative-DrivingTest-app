@@ -16,7 +16,7 @@ import {
     Truck,
     X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { QuestionCard } from '@/components/question-card';
 import { SignsInfoDialog } from '@/components/signs-info-dialog';
@@ -320,11 +320,24 @@ export default function QuestionsIndex({
         ),
     );
     const [sessionScore, setSessionScore] = useState({ correct: 0, wrong: 0 });
+    const [sessionCorrectIds, setSessionCorrectIds] = useState<number[]>([]);
+    const [sessionWrongIds, setSessionWrongIds] = useState<number[]>([]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [categorySearch, setCategorySearch] = useState('');
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
     const [signsModalQuestion, setSignsModalQuestion] =
         useState<Question | null>(null);
+    const [submittingQuestions, setSubmittingQuestions] = useState<Set<number>>(
+        new Set(),
+    );
+
+    // Ref to track pending answer submissions to prevent race conditions
+    const pendingAnswersRef = useRef<Set<number>>(new Set());
+
+    // Sync localFilters with server filters when they change
+    useEffect(() => {
+        setLocalFilters(filters);
+    }, [filters]);
 
     // Handle Android back button to close filter sheet instead of navigating
     useEffect(() => {
@@ -366,13 +379,22 @@ export default function QuestionsIndex({
 
     const handleAnswer = useCallback(
         async (question: Question, answerId: number) => {
+            // Check if already answered
             if (answerStates[question.id]?.selectedAnswerId) return;
+
+            // Prevent duplicate submissions using ref (handles rapid clicks)
+            if (pendingAnswersRef.current.has(question.id)) return;
+            pendingAnswersRef.current.add(question.id);
+
+            // Update UI to show loading state
+            setSubmittingQuestions((prev) => new Set(prev).add(question.id));
 
             try {
                 const response = await fetch(
                     `/questions/${question.id}/answer`,
                     {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             Accept: 'application/json',
@@ -407,8 +429,22 @@ export default function QuestionsIndex({
                     correct: prev.correct + (data.is_correct ? 1 : 0),
                     wrong: prev.wrong + (data.is_correct ? 0 : 1),
                 }));
+
+                // Track question IDs for session-based filtering
+                if (data.is_correct) {
+                    setSessionCorrectIds((prev) => [...prev, question.id]);
+                } else {
+                    setSessionWrongIds((prev) => [...prev, question.id]);
+                }
             } catch (error) {
                 console.error('Failed to submit answer:', error);
+            } finally {
+                pendingAnswersRef.current.delete(question.id);
+                setSubmittingQuestions((prev) => {
+                    const next = new Set(prev);
+                    next.delete(question.id);
+                    return next;
+                });
             }
         },
         [answerStates],
@@ -418,6 +454,7 @@ export default function QuestionsIndex({
         try {
             const response = await fetch(`/questions/${questionId}/bookmark`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
@@ -455,6 +492,7 @@ export default function QuestionsIndex({
     }, [localFilters]);
 
     // Toggle answer status filter (correct/wrong) - only one can be active
+    // Uses session-based IDs for filtering
     const toggleAnswerFilter = useCallback(
         (type: 'correct' | 'wrong') => {
             const isCurrentlyActive =
@@ -467,41 +505,56 @@ export default function QuestionsIndex({
                 wrong_only: type === 'wrong' ? !isCurrentlyActive : false,
             };
             setLocalFilters(newFilters);
-            router.get('/questions', newFilters, {
+
+            // Pass session IDs for filtering
+            const requestParams = {
+                ...newFilters,
+                session_correct_ids:
+                    type === 'correct' && !isCurrentlyActive
+                        ? sessionCorrectIds
+                        : [],
+                session_wrong_ids:
+                    type === 'wrong' && !isCurrentlyActive
+                        ? sessionWrongIds
+                        : [],
+            };
+
+            router.get('/questions', requestParams, {
                 preserveState: true,
                 preserveScroll: true,
             });
         },
-        [localFilters],
+        [localFilters, sessionCorrectIds, sessionWrongIds],
     );
 
     const goToPage = useCallback(
         (page: number) => {
             router.get(
                 '/questions',
-                { ...filters, page },
+                { ...localFilters, page },
                 {
                     preserveState: true,
                     preserveScroll: true,
                 },
             );
         },
-        [filters],
+        [localFilters],
     );
 
     const handlePerPageChange = useCallback(
         (perPage: number) => {
-            setLocalFilters((f) => ({ ...f, per_page: perPage }));
+            const newFilters = { ...localFilters, per_page: perPage };
+            setLocalFilters(newFilters);
             router.get(
                 '/questions',
-                { ...filters, per_page: perPage, page: 1 },
+                { ...newFilters, page: 1 },
                 {
                     preserveState: true,
                     preserveScroll: true,
                 },
             );
         },
-        [filters],
+        [localFilters],
     );
 
     // Calculate total count for all categories
@@ -822,6 +875,7 @@ export default function QuestionsIndex({
                         }
                         answerState={answerStates[question.id]}
                         isBookmarked={bookmarkedQuestions[question.id] || false}
+                        isSubmitting={submittingQuestions.has(question.id)}
                         onAnswer={handleAnswer}
                         onBookmark={handleBookmark}
                         onInfoClick={setSignsModalQuestion}
