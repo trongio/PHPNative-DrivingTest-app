@@ -128,17 +128,17 @@ A dedicated section for browsing and learning road signs separately from test mo
 ## 5. Test Modes
 
 ### 5.1 Quick Test (სწრაფი ტესტი)
-- [ ] Standard exam simulation
-- [ ] Default: 30 questions, 30 minutes, 3 mistakes allowed
-- [ ] Randomized questions from all categories
+- [x] Standard exam simulation
+- [x] Default: 30 questions, 30 minutes, 3 mistakes allowed
+- [x] Randomized questions from all categories
 - [ ] Mirrors official exam format
 
 ### 5.2 Thematic Test (თემატური ტესტი)
-- [ ] User selects specific categories to test
-- [ ] Configurable question count (10-400)
-- [ ] Focus on weak areas
-- [ ] Can combine multiple categories
-- [ ] Option to include inactive questions for comprehensive practice
+- [x] User selects specific categories to test
+- [x] Configurable question count (10-400)
+- [x] Focus on weak areas
+- [x] Can combine multiple categories
+- [x] Option to include inactive questions for comprehensive practice
 
 ### 5.3 Learning Mode / Question Browser (ბილეთები/სასწავლო რეჟიმი)
 Browse and practice questions at your own pace without test pressure.
@@ -196,35 +196,35 @@ Browse and practice questions at your own pace without test pressure.
 ## 6. Test Configuration
 
 ### 6.1 Timer Settings
-- [ ] Default: 1 minute per question
-- [ ] Configurable time per question (30s - 3min)
-- [ ] Total test time = questions × time per question
-- [ ] Timer continues past zero (goes negative)
-- [ ] Negative time displayed in red
-- [ ] Test marked as failed when time exceeds limit
+- [x] Default: 1 minute per question
+- [x] Configurable time per question (30s - 3min)
+- [x] Total test time = questions × time per question
+- [x] Timer continues past zero (goes negative)
+- [x] Negative time displayed in red
+- [x] Test marked as failed when time exceeds limit
 
 ### 6.2 Failure Threshold
-- [ ] Default: 10% wrong answers = fail
-- [ ] Configurable per test/template (5% - 30%)
-- [ ] Example: 30 questions with 10% threshold = 3 mistakes allowed
-- [ ] Real-time tracking during test
+- [x] Default: 10% wrong answers = fail
+- [x] Configurable per test/template (5% - 30%)
+- [x] Example: 30 questions with 10% threshold = 3 mistakes allowed
+- [x] Real-time tracking during test
 
 ### 6.3 On Test Failure
-- [ ] Show failure notification immediately
-- [ ] Display current score and time
-- [ ] Options:
+- [x] Show failure notification immediately
+- [x] Display current score and time
+- [x] Options:
   - **Continue Test** - Complete remaining questions for practice
   - **Finish Test** - End and save results
-- [ ] Timer continues in negative (shown in red)
-- [ ] Final results show "FAILED" status clearly
+- [x] Timer continues in negative (shown in red)
+- [x] Final results show "FAILED" status clearly
 
 ---
 
 ## 7. Templates
 
 ### 7.1 Template Creation
-- [ ] User-defined test configurations
-- [ ] Template settings:
+- [x] User-defined test configurations
+- [x] Template settings:
   - Name
   - License category
   - Question count
@@ -232,19 +232,19 @@ Browse and practice questions at your own pace without test pressure.
   - Failure threshold (default 10%)
   - Selected question categories
   - Include/exclude specific questions
-- [ ] Save unlimited templates
+- [x] Save unlimited templates
 
 ### 7.2 Template Management
-- [ ] Edit existing templates
+- [x] Edit existing templates
 - [ ] Duplicate templates
-- [ ] Delete templates
+- [x] Delete templates
 - [ ] Share templates between users (optional)
 
 ### 7.3 Category Selection in Templates
-- [ ] Select from all 46 categories
-- [ ] Select all / Deselect all
-- [ ] Show question count per category
-- [ ] Mix categories as needed
+- [x] Select from all 46 categories
+- [x] Select all / Deselect all
+- [x] Show question count per category
+- [x] Mix categories as needed
 
 ---
 
@@ -279,30 +279,30 @@ Browse and practice questions at your own pace without test pressure.
 
 ### 9.1 History Records
 Each completed test saves:
-- [ ] Date and time
-- [ ] Test type (Quick/Thematic/Custom/Template)
-- [ ] Score (correct/total)
-- [ ] Pass/Fail status
-- [ ] Time taken (including negative time if any)
-- [ ] Categories included
-- [ ] Individual question results
+- [x] Date and time
+- [x] Test type (Quick/Thematic/Custom/Template)
+- [x] Score (correct/total)
+- [x] Pass/Fail status
+- [x] Time taken (including negative time if any)
+- [x] Categories included
+- [x] Individual question results
 
 ### 9.2 History Actions
-- [ ] **View** - See detailed results with all questions
-- [ ] **Retake** - Start same test again (same questions)
-- [ ] **Retake Similar** - Same configuration, different questions
-- [ ] **Delete** - Remove from history
-- [ ] Filter history by:
+- [x] **View** - See detailed results with all questions
+- [x] **Retake** - Start same test again (same questions)
+- [x] **Retake Similar** - Same configuration, different questions
+- [x] **Delete** - Remove from history
+- [x] Filter history by:
   - Date range
   - Pass/Fail
   - Test type
   - Category
 
 ### 9.3 Question Review
-- [ ] See each question with user's answer
-- [ ] Highlight correct/wrong answers
-- [ ] Show correct answer for wrong responses
-- [ ] View explanation for each question
+- [x] See each question with user's answer
+- [x] Highlight correct/wrong answers
+- [x] Show correct answer for wrong responses
+- [x] View explanation for each question
 - [ ] Save questions directly from history review
 
 ---
@@ -310,27 +310,27 @@ Each completed test saves:
 ## 10. Statistics & Analytics
 
 ### 10.1 Overview Dashboard
-- [ ] Total tests taken
-- [ ] Overall pass rate (%)
-- [ ] Total questions answered
-- [ ] Overall accuracy (%)
+- [x] Total tests taken
+- [x] Overall pass rate (%)
+- [x] Total questions answered
+- [x] Overall accuracy (%)
 - [ ] Current streak (days)
 - [ ] Best streak record
 
 ### 10.2 Time-Based Statistics
-- [ ] Tests per day/week/month
-- [ ] Average score trend over time
+- [x] Tests per day/week/month
+- [x] Average score trend over time
 - [ ] Time spent studying (daily/weekly/monthly)
-- [ ] Progress graphs and charts
+- [x] Progress graphs and charts
 - [ ] Calendar view of activity
 
 ### 10.3 Category Mastery
-- [ ] Accuracy % per category
-- [ ] Questions answered per category
-- [ ] Weakest categories (for targeted practice)
-- [ ] Strongest categories
+- [x] Accuracy % per category
+- [x] Questions answered per category
+- [x] Weakest categories (for targeted practice)
+- [x] Strongest categories
 - [ ] Category improvement over time
-- [ ] Visual mastery indicators (progress bars)
+- [x] Visual mastery indicators (progress bars)
 
 ### 10.4 Question Analytics
 - [ ] Most frequently wrong questions
@@ -353,27 +353,27 @@ Each completed test saves:
 
 ### 11.1 Main Navigation
 - [x] Home/Dashboard
-- [ ] Test Modes
+- [x] Test Modes
 - [x] Learning Mode (Question Browser)
 - [x] Road Signs Reference
 - [x] Saved Questions (via bookmarked filter)
-- [ ] History
-- [ ] Statistics
-- [ ] Templates
+- [x] History
+- [x] Statistics (on Dashboard)
+- [x] Templates
 - [x] Settings
 - [x] User Profile/Switch
 
 ### 11.2 Test Interface
-- [ ] Question number indicator (e.g., 15/30)
-- [ ] Timer display (prominent)
-- [ ] Timer turns red when negative
-- [ ] Progress bar
-- [ ] Current score
-- [ ] Wrong answer count vs allowed
+- [x] Question number indicator (e.g., 15/30)
+- [x] Timer display (prominent)
+- [x] Timer turns red when negative
+- [x] Progress bar
+- [x] Current score
+- [x] Wrong answer count vs allowed
 - [x] Question image (when applicable)
 - [x] Answer options (2-4 choices)
 - [x] Navigation: Previous/Next/Skip
-- [ ] End test button
+- [x] End test button (abandon)
 - [x] Bookmark/Save question button
 
 ### 11.3 Question Display
@@ -395,11 +395,11 @@ Each completed test saves:
 ## 12. Settings
 
 ### 12.1 Test Defaults
-- [ ] Default time per question
-- [ ] Default failure threshold
-- [ ] Default question count
-- [ ] Preferred license category
-- [ ] Auto-advance after answer
+- [x] Default time per question
+- [x] Default failure threshold
+- [x] Default question count
+- [x] Preferred license category
+- [x] Auto-advance after answer
 - [ ] Sound effects on/off
 - [ ] Vibration feedback on/off
 
@@ -581,3 +581,4 @@ All database tables are implemented ✅
 |---------|------|---------|
 | 0.1 | 2025-01-15 | Initial feature specification |
 | 0.2 | 2025-01-17 | Image optimization (WebP), caching, lazy loading, prefetching |
+| 0.9.0 | 2025-01-18 | Complete test system, templates, dashboard with stats/charts, pass chance calculation, auto-advance mode, onboarding flow, test history with filtering |
