@@ -28,6 +28,8 @@ class User extends Authenticatable
         'profile_image',
         'has_password',
         'question_filter_preferences',
+        'default_license_type_id',
+        'test_auto_advance',
     ];
 
     /**
@@ -64,6 +66,7 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'has_password' => 'boolean',
             'question_filter_preferences' => 'array',
+            'test_auto_advance' => 'boolean',
         ];
     }
 
@@ -99,5 +102,15 @@ class User extends Authenticatable
     public function bookmarkedQuestions(): HasMany
     {
         return $this->hasMany(UserQuestionProgress::class)->where('is_bookmarked', true);
+    }
+
+    public function defaultLicenseType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(LicenseType::class, 'default_license_type_id');
+    }
+
+    public function inProgressTests(): HasMany
+    {
+        return $this->hasMany(TestResult::class)->inProgress();
     }
 }

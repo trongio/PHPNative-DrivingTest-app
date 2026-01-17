@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\QuestionBrowserController;
 use App\Http\Controllers\SignsController;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\TestHistoryController;
+use App\Http\Controllers\TestTemplateController;
 use App\Http\Controllers\UserSelectionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -49,13 +53,35 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    Route::get('test', function () {
-        return Inertia::render('test/index');
-    })->name('test.index');
+    // Onboarding (license selection)
+    Route::get('onboarding/license', [OnboardingController::class, 'licenseSelection'])->name('onboarding.license');
+    Route::post('onboarding/license', [OnboardingController::class, 'saveLicense'])->name('onboarding.license.save');
 
-    Route::get('history', function () {
-        return Inertia::render('history/index');
-    })->name('history.index');
+    // Test System
+    Route::get('test', [TestController::class, 'create'])->name('test.index');
+    Route::post('test', [TestController::class, 'store'])->name('test.store');
+    Route::post('test/quick', [TestController::class, 'quickStart'])->name('test.quick');
+
+    // Test History (must be before test/{testResult} to prevent route conflict)
+    Route::get('test/history', [TestHistoryController::class, 'index'])->name('test.history.index');
+    Route::get('test/history/{testResult}', [TestHistoryController::class, 'show'])->name('test.history.show');
+    Route::delete('test/history/{testResult}', [TestHistoryController::class, 'destroy'])->name('test.history.destroy');
+
+    // Test taking routes (dynamic testResult parameter)
+    Route::get('test/{testResult}', [TestController::class, 'show'])->name('test.show');
+    Route::post('test/{testResult}/answer', [TestController::class, 'answer'])->name('test.answer');
+    Route::post('test/{testResult}/pause', [TestController::class, 'pause'])->name('test.pause');
+    Route::post('test/{testResult}/skip', [TestController::class, 'skip'])->name('test.skip');
+    Route::post('test/{testResult}/complete', [TestController::class, 'complete'])->name('test.complete');
+    Route::get('test/{testResult}/results', [TestController::class, 'results'])->name('test.results');
+    Route::post('test/{testResult}/redo-same', [TestController::class, 'redoSame'])->name('test.redo-same');
+    Route::post('test/{testResult}/new-similar', [TestController::class, 'newSimilar'])->name('test.new-similar');
+
+    // Test Templates
+    Route::get('templates', [TestTemplateController::class, 'index'])->name('templates.index');
+    Route::post('templates', [TestTemplateController::class, 'store'])->name('templates.store');
+    Route::put('templates/{testTemplate}', [TestTemplateController::class, 'update'])->name('templates.update');
+    Route::delete('templates/{testTemplate}', [TestTemplateController::class, 'destroy'])->name('templates.destroy');
 
     // Question Browser
     Route::get('questions', [QuestionBrowserController::class, 'index'])->name('questions.index');
