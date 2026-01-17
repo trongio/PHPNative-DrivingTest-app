@@ -91,8 +91,9 @@ export default function UserSelection({ users }: Props) {
         // This prevents the 503 error on web browsers
         const hasNativeBridge =
             typeof window !== 'undefined' &&
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (('nativephp' in window) || ('webkit' in window && (window as any).webkit?.messageHandlers?.nativephp));
+            ('nativephp' in window ||
+                ('webkit' in window &&
+                    (window as any).webkit?.messageHandlers?.nativephp));
 
         if (hasNativeBridge) {
             isMobile()
@@ -130,7 +131,12 @@ export default function UserSelection({ users }: Props) {
     const [registerPassword, setRegisterPassword] = useState('');
 
     const handleUserClick = async (user: UserData) => {
-        console.log('handleUserClick called, isNative:', isNative, 'user:', user);
+        console.log(
+            'handleUserClick called, isNative:',
+            isNative,
+            'user:',
+            user,
+        );
 
         if (user.has_password) {
             setSelectedUser(user);
