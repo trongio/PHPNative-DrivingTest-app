@@ -87,7 +87,20 @@ export default function UserSelection({ users }: Props) {
 
     // Check if running in NativePHP mobile
     useEffect(() => {
-        isMobile().then(setIsNative);
+        // Check if NativePHP bridge is available before calling isMobile()
+        // This prevents the 503 error on web browsers
+        const hasNativeBridge =
+            typeof window !== 'undefined' &&
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (('nativephp' in window) || ('webkit' in window && (window as any).webkit?.messageHandlers?.nativephp));
+
+        if (hasNativeBridge) {
+            isMobile()
+                .then(setIsNative)
+                .catch(() => setIsNative(false));
+        } else {
+            setIsNative(false);
+        }
     }, []);
 
     // Login form - include 'error' for general auth errors from Laravel
