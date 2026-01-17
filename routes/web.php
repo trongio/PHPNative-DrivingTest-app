@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\QuestionBrowserController;
 use App\Http\Controllers\SignsController;
@@ -8,7 +9,6 @@ use App\Http\Controllers\TestHistoryController;
 use App\Http\Controllers\TestTemplateController;
 use App\Http\Controllers\UserSelectionController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // User Selection (Login/Register)
 Route::get('/', [UserSelectionController::class, 'index'])->name('home');
@@ -49,9 +49,7 @@ Route::get('/native-file/preview', function () {
 })->name('native.file.preview');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Onboarding (license selection)
     Route::get('onboarding/license', [OnboardingController::class, 'licenseSelection'])->name('onboarding.license');
