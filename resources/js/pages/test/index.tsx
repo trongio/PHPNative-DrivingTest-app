@@ -17,10 +17,12 @@ import {
     TramFront,
     Trash2,
     Truck,
+    Undo2,
     Zap,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { ActiveTestCard } from '@/components/active-test-card';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -133,13 +135,6 @@ const getLicenseTypeIcon = (code: string) => {
     return <Car className={iconClass} />;
 };
 
-const formatTime = (seconds: number) => {
-    const mins = Math.floor(Math.abs(seconds) / 60);
-    const secs = Math.abs(seconds) % 60;
-    const sign = seconds < 0 ? '-' : '';
-    return `${sign}${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
 const timeOptions = [
     { value: 30, label: '30წმ' },
     { value: 45, label: '45წმ' },
@@ -147,6 +142,13 @@ const timeOptions = [
     { value: 90, label: '1.5წთ' },
     { value: 120, label: '2წთ' },
 ];
+
+// Default values for test configuration
+const DEFAULTS = {
+    question_count: 30,
+    time_per_question: 60,
+    failure_threshold: 10,
+};
 
 export default function TestIndex({
     templates,
@@ -219,7 +221,7 @@ export default function TestIndex({
             maxAvailableQuestions > 0 &&
             form.data.question_count > maxAvailableQuestions
         ) {
-            form.setData('question_count', Math.max(10, maxAvailableQuestions));
+            form.setData('question_count', Math.max(1, maxAvailableQuestions));
         }
     }, [maxAvailableQuestions]);
 
@@ -371,54 +373,13 @@ export default function TestIndex({
                     სწრაფი ტესტი
                 </Button>
 
-                {/* Continue Section - Active test (matching dashboard style) */}
+                {/* Continue Section - Active test */}
                 {activeTest && (
-                    <Card className="border-primary/50 bg-gradient-to-r from-primary/10 to-primary/5">
-                        <CardContent className="p-4">
-                            <button
-                                onClick={handleResumeTest}
-                                className="flex w-full items-center gap-3"
-                            >
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                                    <Play className="h-6 w-6 text-primary" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">
-                                            გაგრძელება
-                                        </span>
-                                        <span className="rounded bg-primary/20 px-1.5 py-0.5 text-xs text-primary">
-                                            {activeTest.test_type === 'bookmarked'
-                                                ? 'შენახული'
-                                                : activeTest.test_type === 'quick'
-                                                  ? 'სწრაფი'
-                                                  : 'თემატური'}
-                                        </span>
-                                        <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                                            {activeTest.license_type ? (
-                                                <>
-                                                    {getLicenseTypeIcon(activeTest.license_type.code)}
-                                                    {activeTest.license_type.code}
-                                                </>
-                                            ) : (
-                                                'ყველა'
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                        <span>
-                                            {activeTest.answered_count}/
-                                            {activeTest.total_questions}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
-                                            {formatTime(activeTest.remaining_time_seconds)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </button>
-                        </CardContent>
-                    </Card>
+                    <ActiveTestCard
+                        activeTest={activeTest}
+                        onClick={handleResumeTest}
+                        asLink={false}
+                    />
                 )}
 
                 {/* Templates Section */}
@@ -460,10 +421,15 @@ export default function TestIndex({
                                                 {template.license_type ? (
                                                     <>
                                                         {getLicenseTypeIcon(
-                                                            template.license_type
+                                                            template
+                                                                .license_type
                                                                 .code,
                                                         )}
-                                                        {template.license_type.code}
+                                                        {
+                                                            template
+                                                                .license_type
+                                                                .code
+                                                        }
                                                     </>
                                                 ) : (
                                                     'ყველა'
@@ -542,7 +508,7 @@ export default function TestIndex({
                             ახალი ტესტის შექმნა
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-6">
                         {/* Test Type Tabs */}
                         <Tabs
                             value={testType}
@@ -564,10 +530,31 @@ export default function TestIndex({
                                 </TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="thematic" className="space-y-4">
+                            <TabsContent value="thematic" className="space-y-6">
                                 {/* License Type */}
                                 <div className="space-y-2">
-                                    <Label>კატეგორია</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label>კატეგორია</Label>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() =>
+                                                form.setData(
+                                                    'license_type_id',
+                                                    userDefaults.license_type_id,
+                                                )
+                                            }
+                                            disabled={
+                                                form.data.license_type_id ===
+                                                userDefaults.license_type_id
+                                            }
+                                            title="ნაგულისხმევზე დაბრუნება"
+                                        >
+                                            <Undo2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
                                     <Select
                                         value={
                                             form.data.license_type_id?.toString() ||
@@ -614,7 +601,7 @@ export default function TestIndex({
                                 {/* Categories Multi-select */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <Label>თემები (არჩევითი)</Label>
+                                        <Label>თემები</Label>
                                         <div className="flex gap-1">
                                             <button
                                                 type="button"
@@ -743,24 +730,53 @@ export default function TestIndex({
 
                         {/* Question Count */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label>კითხვების რაოდენობა</Label>
-                                <span className="text-sm font-medium">
-                                    {form.data.question_count} /{' '}
-                                    {maxAvailableQuestions}
-                                </span>
+                            <div className="flex items-center justify-between gap-2">
+                                <Label className="text-sm leading-relaxed">
+                                    კითხვების რაოდენობა
+                                </Label>
+                                <div className="flex shrink-0 items-center gap-1">
+                                    <span className="text-xs font-medium ">
+                                        {form.data.question_count}/
+                                        {maxAvailableQuestions}
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() =>
+                                            form.setData(
+                                                'question_count',
+                                                Math.min(
+                                                    DEFAULTS.question_count,
+                                                    maxAvailableQuestions,
+                                                ),
+                                            )
+                                        }
+                                        disabled={
+                                            form.data.question_count ===
+                                            Math.min(
+                                                DEFAULTS.question_count,
+                                                maxAvailableQuestions,
+                                            )
+                                        }
+                                        title="ნაგულისხმევზე დაბრუნება"
+                                    >
+                                        <Undo2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
                             </div>
                             <Slider
                                 value={[form.data.question_count]}
                                 onValueChange={([v]) =>
                                     form.setData('question_count', v)
                                 }
-                                min={10}
-                                max={Math.max(10, maxAvailableQuestions)}
-                                step={5}
-                                disabled={maxAvailableQuestions < 10}
+                                min={1}
+                                max={Math.max(1, maxAvailableQuestions)}
+                                step={1}
+                                disabled={maxAvailableQuestions < 1}
                             />
-                            {maxAvailableQuestions < 10 && (
+                            {maxAvailableQuestions < 1 && (
                                 <p className="text-xs text-destructive">
                                     არასაკმარისი კითხვები (
                                     {maxAvailableQuestions})
@@ -770,7 +786,30 @@ export default function TestIndex({
 
                         {/* Time per Question */}
                         <div className="space-y-2">
-                            <Label>დრო კითხვაზე</Label>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm leading-relaxed">
+                                    დრო კითხვაზე
+                                </Label>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() =>
+                                        form.setData(
+                                            'time_per_question',
+                                            DEFAULTS.time_per_question,
+                                        )
+                                    }
+                                    disabled={
+                                        form.data.time_per_question ===
+                                        DEFAULTS.time_per_question
+                                    }
+                                    title="ნაგულისხმევზე დაბრუნება"
+                                >
+                                    <Undo2 className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
                             <Select
                                 value={form.data.time_per_question.toString()}
                                 onValueChange={(v) =>
@@ -798,12 +837,35 @@ export default function TestIndex({
 
                         {/* Allowed Mistakes - Slider based */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label>დასაშვები შეცდომები</Label>
-                                <span className="text-sm font-medium">
-                                    {allowedMistakes} (
-                                    {form.data.failure_threshold}%)
-                                </span>
+                            <div className="flex items-center justify-between gap-2">
+                                <Label className="text-sm leading-relaxed">
+                                    დასაშვები შეცდომები
+                                </Label>
+                                <div className="flex shrink-0 items-center gap-1">
+                                    <span className="text-xs font-medium">
+                                        {allowedMistakes} (
+                                        {form.data.failure_threshold}%)
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() =>
+                                            form.setData(
+                                                'failure_threshold',
+                                                DEFAULTS.failure_threshold,
+                                            )
+                                        }
+                                        disabled={
+                                            form.data.failure_threshold ===
+                                            DEFAULTS.failure_threshold
+                                        }
+                                        title="ნაგულისხმევზე დაბრუნება"
+                                    >
+                                        <Undo2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
                             </div>
                             <Slider
                                 value={[form.data.failure_threshold]}
@@ -823,7 +885,9 @@ export default function TestIndex({
                         {/* Auto-advance Toggle */}
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label>ავტო-გადასვლა</Label>
+                                <Label className="text-sm leading-relaxed">
+                                    ავტო-გადასვლა
+                                </Label>
                                 <p className="text-xs text-muted-foreground">
                                     პასუხის შემდეგ ავტომატურად გადავა შემდეგ
                                     კითხვაზე
@@ -849,10 +913,10 @@ export default function TestIndex({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                             <Button
                                 variant="outline"
-                                className="shrink-0"
+                                className="order-2 w-full sm:order-1 sm:w-auto sm:shrink-0"
                                 onClick={() => {
                                     setEditingTemplate(null);
                                     setTemplateName('');
@@ -863,17 +927,17 @@ export default function TestIndex({
                                 შაბლონად
                             </Button>
                             <Button
-                                className="flex-1"
+                                className="order-1 min-w-0 flex-1 sm:order-2"
                                 onClick={handleStartTest}
                                 disabled={
                                     form.processing ||
                                     (testType === 'bookmarked' &&
                                         bookmarkedCount === 0) ||
-                                    maxAvailableQuestions < 10
+                                    maxAvailableQuestions < 1
                                 }
                             >
-                                <Play className="h-4 w-4" />
-                                ტესტის დაწყება
+                                <Play className="h-4 w-4 shrink-0" />
+                                <span className="truncate">ტესტის დაწყება</span>
                             </Button>
                         </div>
                     </CardContent>

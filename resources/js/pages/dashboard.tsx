@@ -2,10 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     BookOpen,
     CheckCircle2,
-    ChevronRight,
-    Clock,
     Gauge,
-    Play,
     Target,
     TrendingDown,
     TrendingUp,
@@ -15,10 +12,8 @@ import {
 } from 'lucide-react';
 import { useEffect } from 'react';
 
-import {
-    getLicenseTypeIcon,
-    LicenseTypeSelect,
-} from '@/components/license-type-select';
+import { ActiveTestCard } from '@/components/active-test-card';
+import { LicenseTypeSelect } from '@/components/license-type-select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,21 +88,6 @@ interface Props {
     passChance: PassChance | null;
 }
 
-const formatTime = (seconds: number) => {
-    const mins = Math.floor(Math.abs(seconds) / 60);
-    const secs = Math.abs(seconds) % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
-const getTestTypeName = (type: string) => {
-    const types: Record<string, string> = {
-        thematic: 'თემატური',
-        bookmarked: 'შენახული',
-        quick: 'სწრაფი',
-    };
-    return types[type] || type;
-};
-
 export default function Dashboard({
     stats,
     progress,
@@ -133,7 +113,10 @@ export default function Dashboard({
     const handleLicenseChange = (licenseId: string) => {
         router.post(
             '/onboarding/license',
-            { license_type_id: licenseId === 'none' ? null : parseInt(licenseId) },
+            {
+                license_type_id:
+                    licenseId === 'none' ? null : parseInt(licenseId),
+            },
             { preserveScroll: true },
         );
     };
@@ -142,22 +125,27 @@ export default function Dashboard({
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
-                // Partial reload - only fetch updated data, preserve scroll
+                // Partial reload - only fetch updated data
                 router.reload({
                     only: ['passChance', 'stats', 'progress', 'activeTest'],
-                    preserveScroll: true,
                 });
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange,
+            );
         };
     }, []);
 
     // Calculate chart data
-    const maxScore = Math.max(...recentTests.map((t) => t.score_percentage), 100);
+    const maxScore = Math.max(
+        ...recentTests.map((t) => t.score_percentage),
+        100,
+    );
     const chartHeight = 60;
 
     return (
@@ -184,7 +172,9 @@ export default function Dashboard({
                                 <LicenseTypeSelect
                                     value={defaultLicenseType?.id || null}
                                     onValueChange={(id) =>
-                                        handleLicenseChange(id?.toString() || 'none')
+                                        handleLicenseChange(
+                                            id?.toString() || 'none',
+                                        )
                                     }
                                     licenseTypes={licenseTypes}
                                     placeholder="აირჩიე კატეგორია"
@@ -224,7 +214,8 @@ export default function Dashboard({
                                                 'transition-all duration-500',
                                                 passChance.percentage >= 70
                                                     ? 'text-green-500'
-                                                    : passChance.percentage >= 50
+                                                    : passChance.percentage >=
+                                                        50
                                                       ? 'text-amber-500'
                                                       : 'text-red-500',
                                             )}
@@ -236,7 +227,8 @@ export default function Dashboard({
                                                 'text-sm font-bold',
                                                 passChance.percentage >= 70
                                                     ? 'text-green-500'
-                                                    : passChance.percentage >= 50
+                                                    : passChance.percentage >=
+                                                        50
                                                       ? 'text-amber-500'
                                                       : 'text-red-500',
                                             )}
@@ -255,55 +247,7 @@ export default function Dashboard({
                 </Card>
 
                 {/* Continue Test Card */}
-                {activeTest && (
-                    <Card className="border-primary/50 bg-gradient-to-r from-primary/10 to-primary/5">
-                        <CardContent className="p-4">
-                            <Link
-                                href={`/test/${activeTest.id}`}
-                                className="flex items-center gap-3"
-                            >
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                                    <Play className="h-6 w-6 text-primary" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="font-medium">
-                                            გაგრძელება
-                                        </span>
-                                        <span className="rounded bg-primary/20 px-1.5 py-0.5 text-xs text-primary">
-                                            {getTestTypeName(activeTest.test_type)}
-                                        </span>
-                                        <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                                            {activeTest.license_type ? (
-                                                <>
-                                                    {getLicenseTypeIcon(
-                                                        activeTest.license_type.code,
-                                                    )}
-                                                    {activeTest.license_type.code}
-                                                </>
-                                            ) : (
-                                                'ყველა'
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                        <span>
-                                            {activeTest.answered_count}/
-                                            {activeTest.total_questions}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
-                                            {formatTime(
-                                                activeTest.remaining_time_seconds,
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </Link>
-                        </CardContent>
-                    </Card>
-                )}
+                {activeTest && <ActiveTestCard activeTest={activeTest} />}
 
                 {/* Quick Actions */}
                 {!activeTest && (
@@ -409,7 +353,7 @@ export default function Dashboard({
                                             }}
                                         />
                                         {/* Tooltip */}
-                                        <div className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                                        <div className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded bg-popover px-2 py-1 text-xs whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                                             {Math.round(test.score_percentage)}%
                                         </div>
                                     </div>

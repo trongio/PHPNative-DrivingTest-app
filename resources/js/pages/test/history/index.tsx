@@ -129,7 +129,7 @@ export default function HistoryIndex({ testResults, stats, filters }: Props) {
         });
 
         router.get('/test/history', queryParams, {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
         });
     };

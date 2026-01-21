@@ -6,6 +6,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Pause,
+    Redo2,
     SkipForward,
     X,
 } from 'lucide-react';
@@ -364,15 +365,14 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
                 if (data.has_exceeded_mistakes && !hasFailed) {
                     setHasFailed(true);
                     setShowFailedDialog(true);
-                } else if (autoAdvance) {
-                    // Auto-advance to next question after brief delay
-                    // Note: We advance directly instead of using goToNext() to avoid stale closure issues
-                    // Auto-advance continues even after failing (for practice mode)
-                    if (currentIndex < questions.length - 1) {
-                        autoAdvanceRef.current = setTimeout(() => {
-                            setCurrentIndex((prev) => prev + 1);
-                        }, 200);
-                    }
+                }
+
+                // Auto-advance to next question after brief delay
+                // Note: Auto-advance happens regardless of failure (for practice mode)
+                if (autoAdvance && currentIndex < questions.length - 1) {
+                    autoAdvanceRef.current = setTimeout(() => {
+                        setCurrentIndex((prev) => prev + 1);
+                    }, 200);
                 }
             } catch (error) {
                 console.error('Failed to submit answer:', error);
@@ -550,30 +550,28 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
                     </div>
                 </div>
 
-                {/* Row 2: Skip (left), Auto-advance toggle (center), Pause (right) */}
-                <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-1.5">
+                {/* Row 2: Pause (left), Auto-advance toggle (center), Skip (right) */}
+                <div className="flex items-center justify-between border-t bg-muted/30 px-3 py-1.5">
                     {/* Pause Button */}
                     <Button
-                        variant="ghost"
-                        size="sm"
+                        variant="outline"
+                        size="icon"
                         onClick={() => setShowPauseDialog(true)}
-                        className="h-8 gap-1.5 px-3 text-muted-foreground hover:text-foreground"
+                        className="h-8 w-8"
                     >
                         <Pause className="h-4 w-4" />
-                        შეჩერება
                     </Button>
 
                     {/* Auto-advance Toggle */}
                     <label
                         className={cn(
-                            'flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs transition-colors',
+                            'flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-md px-2 text-xs transition-colors',
                             autoAdvance
                                 ? 'bg-primary/10 text-primary'
                                 : 'text-muted-foreground hover:text-foreground',
                         )}
                     >
                         <SkipForward className="h-3.5 w-3.5" />
-                        <span>ავტო</span>
                         <Switch
                             checked={autoAdvance}
                             onCheckedChange={setAutoAdvance}
@@ -583,13 +581,13 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
 
                     {/* Skip Button */}
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={handleSkip}
                         disabled={isAnswered || isSubmitting}
-                        className="h-8 px-3 text-muted-foreground hover:text-foreground"
+                        className="h-8 gap-1 px-2 text-xs"
                     >
-                        გამოტოვება
+                        <Redo2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             </header>
@@ -622,20 +620,20 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
                     paddingBottom: 'var(--inset-bottom)',
                 }}
             >
-                <div className="flex h-16 items-center justify-between gap-2 px-4">
+                <div className="flex h-14 items-center justify-between gap-1 px-2 sm:h-16 sm:gap-2 sm:px-4">
                     {/* Previous */}
                     <Button
                         variant="outline"
                         size="icon"
                         onClick={goToPrevious}
                         disabled={currentIndex === 0}
-                        className="h-11 w-11"
+                        className="h-10 w-10 shrink-0 sm:h-11 sm:w-11"
                     >
                         <ChevronLeft className="h-5 w-5" />
                     </Button>
 
                     {/* Answer Buttons - Always show 4 buttons for consistent layout */}
-                    <div className="flex gap-1.5">
+                    <div className="flex min-w-0 shrink gap-1 sm:gap-1.5">
                         {[0, 1, 2, 3].map((index) => {
                             const answer = shuffledAnswers[index];
                             const hasAnswer = !!answer;
@@ -655,7 +653,7 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
                                         !hasAnswer || isAnswered || isSubmitting
                                     }
                                     className={cn(
-                                        'flex h-11 w-11 items-center justify-center rounded-lg border text-lg font-bold transition-colors',
+                                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-base font-bold transition-colors sm:h-11 sm:w-11 sm:text-lg',
                                         // No answer for this slot - show disabled placeholder
                                         !hasAnswer &&
                                             'cursor-not-allowed border-border bg-muted/30 text-muted-foreground/30',
@@ -697,7 +695,7 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
                         <Button
                             size="sm"
                             onClick={handleComplete}
-                            className="h-11 px-4"
+                            className="h-10 shrink-0 px-3 text-sm sm:h-11 sm:px-4 sm:text-base"
                         >
                             დასრულება
                         </Button>
@@ -711,7 +709,7 @@ export default function ActiveTest({ testResult, userSettings }: Props) {
                                 (!isAnswered &&
                                     !skippedIds.includes(currentQuestion.id))
                             }
-                            className="h-11 w-11"
+                            className="h-10 w-10 shrink-0 sm:h-11 sm:w-11"
                         >
                             <ChevronRight className="h-5 w-5" />
                         </Button>

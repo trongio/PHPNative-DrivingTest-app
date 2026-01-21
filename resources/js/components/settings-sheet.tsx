@@ -235,7 +235,10 @@ function LicenseTypeSelector({
                         >
                             {getLicenseTypeIcon(
                                 lt.code,
-                                cn('h-5 w-5', isSelected && 'text-primary-foreground'),
+                                cn(
+                                    'h-5 w-5',
+                                    isSelected && 'text-primary-foreground',
+                                ),
                             )}
                             <span className="text-xs font-medium">
                                 {lt.code}

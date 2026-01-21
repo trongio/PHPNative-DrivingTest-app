@@ -110,10 +110,7 @@ export function LicenseTypeSelect({
     };
 
     return (
-        <Select
-            value={value?.toString() || 'all'}
-            onValueChange={handleChange}
-        >
+        <Select value={value?.toString() || 'all'} onValueChange={handleChange}>
             <SelectTrigger
                 className={cn(
                     size === 'compact'
