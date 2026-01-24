@@ -57,10 +57,7 @@ class TestTemplateController extends Controller
      */
     public function update(Request $request, TestTemplate $testTemplate): JsonResponse
     {
-        // Verify ownership
-        if ($testTemplate->user_id !== $request->user()->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('update', $testTemplate);
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -91,10 +88,7 @@ class TestTemplateController extends Controller
      */
     public function destroy(Request $request, TestTemplate $testTemplate): JsonResponse
     {
-        // Verify ownership
-        if ($testTemplate->user_id !== $request->user()->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('delete', $testTemplate);
 
         $testTemplate->delete();
 

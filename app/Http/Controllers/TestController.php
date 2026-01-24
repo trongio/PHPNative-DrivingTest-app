@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TestStatus;
+use App\Http\Requests\Test\AnswerTestRequest;
+use App\Http\Requests\Test\StoreTestRequest;
 use App\Models\LicenseType;
 use App\Models\Question;
 use App\Models\QuestionCategory;
@@ -133,17 +136,7 @@ class TestController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse|JsonResponse
     {
-        $request->validate([
-            'test_type' => 'required|in:thematic,bookmarked',
-            'license_type_id' => 'nullable|exists:license_types,id',
-            'question_count' => 'required|integer|min:5|max:1000',
-            'time_per_question' => 'required|integer|min:30|max:180',
-            'failure_threshold' => 'required|integer|min:1|max:50',
-            'category_ids' => 'nullable|array',
-            'category_ids.*' => 'integer|exists:question_categories,id',
-            'auto_advance' => 'boolean',
-            'abandon_active' => 'boolean',
-        ]);
+        $request->validate((new StoreTestRequest)->rules(), (new StoreTestRequest)->messages());
 
         $user = $request->user();
 
@@ -259,7 +252,7 @@ class TestController extends Controller
             'wrong_count' => 0,
             'total_questions' => count($questionsWithAnswers),
             'score_percentage' => 0,
-            'status' => TestResult::STATUS_IN_PROGRESS,
+            'status' => TestStatus::InProgress,
             'started_at' => now(),
             'current_question_index' => 0,
             'answers_given' => [],
@@ -275,12 +268,8 @@ class TestController extends Controller
      */
     public function show(Request $request, TestResult $testResult): Response|\Illuminate\Http\RedirectResponse
     {
+        $this->authorize('view', $testResult);
         $user = $request->user();
-
-        // Verify ownership
-        if ($testResult->user_id !== $user->id) {
-            abort(403);
-        }
 
         // If test is completed, redirect to results
         if ($testResult->isCompleted()) {
@@ -290,7 +279,7 @@ class TestController extends Controller
         // If resuming from paused state, update status
         if ($testResult->isPaused()) {
             $testResult->update([
-                'status' => TestResult::STATUS_IN_PROGRESS,
+                'status' => TestStatus::InProgress,
                 'paused_at' => null,
             ]);
         }
@@ -320,20 +309,10 @@ class TestController extends Controller
     /**
      * Submit an answer for a question.
      */
-    public function answer(Request $request, TestResult $testResult): JsonResponse
+    public function answer(AnswerTestRequest $request, TestResult $testResult): JsonResponse
     {
-        $request->validate([
-            'question_id' => 'required|integer',
-            'answer_id' => 'required|integer',
-            'remaining_time' => 'required|integer',
-        ]);
-
+        $this->authorize('update', $testResult);
         $user = $request->user();
-
-        // Verify ownership and status
-        if ($testResult->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
 
         if ($testResult->isCompleted()) {
             return response()->json(['error' => 'Test already completed'], 400);
@@ -420,24 +399,19 @@ class TestController extends Controller
      */
     public function pause(Request $request, TestResult $testResult): JsonResponse
     {
+        $this->authorize('update', $testResult);
+
         $request->validate([
             'current_question_index' => 'required|integer|min:0',
             'remaining_time' => 'required|integer',
         ]);
-
-        $user = $request->user();
-
-        // Verify ownership
-        if ($testResult->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
 
         if ($testResult->isCompleted()) {
             return response()->json(['error' => 'Test already completed'], 400);
         }
 
         $testResult->update([
-            'status' => TestResult::STATUS_PAUSED,
+            'status' => TestStatus::Paused,
             'paused_at' => now(),
             'current_question_index' => $request->current_question_index,
             'remaining_time_seconds' => $request->remaining_time,
@@ -451,15 +425,11 @@ class TestController extends Controller
      */
     public function skip(Request $request, TestResult $testResult): JsonResponse
     {
+        $this->authorize('update', $testResult);
+
         $request->validate([
             'question_id' => 'required|integer',
         ]);
-
-        $user = $request->user();
-
-        if ($testResult->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
 
         if ($testResult->isCompleted()) {
             return response()->json(['error' => 'Test already completed'], 400);
@@ -488,19 +458,11 @@ class TestController extends Controller
      */
     public function complete(Request $request, TestResult $testResult): JsonResponse|\Illuminate\Http\RedirectResponse
     {
+        $this->authorize('update', $testResult);
+
         $request->validate([
             'remaining_time' => 'nullable|integer',
         ]);
-
-        $user = $request->user();
-
-        // Verify ownership
-        if ($testResult->user_id !== $user->id) {
-            if ($request->wantsJson()) {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-            abort(403);
-        }
 
         if ($testResult->isCompleted()) {
             if ($request->wantsJson()) {
@@ -530,7 +492,7 @@ class TestController extends Controller
         $timeTaken = $totalTime - $remainingTime;
 
         $testResult->update([
-            'status' => $passed ? TestResult::STATUS_PASSED : TestResult::STATUS_FAILED,
+            'status' => $passed ? TestStatus::Passed : TestStatus::Failed,
             'finished_at' => now(),
             'score_percentage' => $scorePercentage,
             'time_taken_seconds' => $timeTaken,
@@ -553,12 +515,7 @@ class TestController extends Controller
      */
     public function results(Request $request, TestResult $testResult): Response|\Illuminate\Http\RedirectResponse
     {
-        $user = $request->user();
-
-        // Verify ownership
-        if ($testResult->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $testResult);
 
         // If test is not completed, redirect to active test
         if (! $testResult->isCompleted()) {
@@ -620,11 +577,8 @@ class TestController extends Controller
      */
     public function redoSame(Request $request, TestResult $testResult): \Illuminate\Http\RedirectResponse|JsonResponse
     {
+        $this->authorize('view', $testResult);
         $user = $request->user();
-
-        if ($testResult->user_id !== $user->id) {
-            abort(403);
-        }
 
         // Check for active test conflict
         if (! $this->handleActiveTestConflict($request, $user->id)) {
@@ -660,7 +614,7 @@ class TestController extends Controller
             'wrong_count' => 0,
             'total_questions' => $testResult->total_questions,
             'score_percentage' => 0,
-            'status' => TestResult::STATUS_IN_PROGRESS,
+            'status' => TestStatus::InProgress,
             'started_at' => now(),
             'current_question_index' => 0,
             'answers_given' => [],
@@ -676,11 +630,8 @@ class TestController extends Controller
      */
     public function newSimilar(Request $request, TestResult $testResult): \Illuminate\Http\RedirectResponse|JsonResponse
     {
+        $this->authorize('view', $testResult);
         $user = $request->user();
-
-        if ($testResult->user_id !== $user->id) {
-            abort(403);
-        }
 
         $config = $testResult->configuration;
 

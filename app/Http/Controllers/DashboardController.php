@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TestStatus;
 use App\Models\LicenseType;
 use App\Models\Question;
 use App\Models\TestResult;
 use App\Models\UserQuestionProgress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,14 +20,14 @@ class DashboardController extends Controller
 
         // Get overall statistics
         $testStats = TestResult::forUser($user->id)
-            ->whereIn('status', [TestResult::STATUS_PASSED, TestResult::STATUS_FAILED])
+            ->whereIn('status', [TestStatus::Passed, TestStatus::Failed])
             ->selectRaw('
                 COUNT(*) as total,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as passed,
                 SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as failed,
                 SUM(correct_count) as total_correct,
                 SUM(wrong_count) as total_wrong
-            ', [TestResult::STATUS_PASSED, TestResult::STATUS_FAILED])
+            ', [TestStatus::Passed, TestStatus::Failed])
             ->first();
 
         // Get active test to continue
@@ -43,26 +45,8 @@ class DashboardController extends Controller
             })
             ->count();
 
-        // Get performance per license type with pass chance
-        $licensePerformance = $this->calculateLicensePerformance($user->id);
-
-        // Get recent test results for chart (last 10 tests)
-        $recentTests = TestResult::forUser($user->id)
-            ->whereIn('status', [TestResult::STATUS_PASSED, TestResult::STATUS_FAILED])
-            ->orderBy('finished_at', 'desc')
-            ->limit(10)
-            ->get(['id', 'status', 'score_percentage', 'finished_at', 'license_type_id'])
-            ->reverse()
-            ->values();
-
-        // Get weekly activity (tests per day for last 7 days)
-        $weeklyActivity = TestResult::forUser($user->id)
-            ->whereIn('status', [TestResult::STATUS_PASSED, TestResult::STATUS_FAILED])
-            ->where('finished_at', '>=', now()->subDays(7))
-            ->selectRaw('DATE(finished_at) as date, COUNT(*) as count, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as passed', [TestResult::STATUS_PASSED])
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // Capture user ID for closures
+        $userId = $user->id;
 
         // Get user's default license type
         $defaultLicenseType = $user->default_license_type_id
@@ -114,9 +98,22 @@ class DashboardController extends Controller
                     ])->toArray(),
                 ] : null,
             ] : null,
-            'licensePerformance' => $licensePerformance,
-            'recentTests' => $recentTests,
-            'weeklyActivity' => $weeklyActivity,
+            // Deferred props - loaded after initial render for faster page load
+            'licensePerformance' => Inertia::defer(fn () => $this->calculateLicensePerformance($userId)),
+            'recentTests' => Inertia::defer(fn () => TestResult::forUser($userId)
+                ->whereIn('status', [TestStatus::Passed, TestStatus::Failed])
+                ->orderBy('finished_at', 'desc')
+                ->limit(10)
+                ->get(['id', 'status', 'score_percentage', 'finished_at', 'license_type_id'])
+                ->reverse()
+                ->values()),
+            'weeklyActivity' => Inertia::defer(fn () => TestResult::forUser($userId)
+                ->whereIn('status', [TestStatus::Passed, TestStatus::Failed])
+                ->where('finished_at', '>=', now()->subDays(7))
+                ->selectRaw('DATE(finished_at) as date, COUNT(*) as count, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as passed', [TestStatus::Passed])
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()),
             'defaultLicenseType' => $defaultLicenseType?->only(['id', 'code', 'name']),
             'licenseTypes' => $licenseTypes,
             'passChance' => $passChance,
@@ -130,7 +127,7 @@ class DashboardController extends Controller
     {
         // Get test results grouped by license type
         $results = TestResult::forUser($userId)
-            ->whereIn('status', [TestResult::STATUS_PASSED, TestResult::STATUS_FAILED])
+            ->whereIn('status', [TestStatus::Passed, TestStatus::Failed])
             ->whereNotNull('license_type_id')
             ->with('licenseType')
             ->get()
@@ -145,7 +142,7 @@ class DashboardController extends Controller
             }
 
             $total = $tests->count();
-            $passed = $tests->where('status', TestResult::STATUS_PASSED)->count();
+            $passed = $tests->where('status', TestStatus::Passed)->count();
             $avgScore = $tests->avg('score_percentage');
 
             // Calculate pass chance based on:
@@ -154,7 +151,7 @@ class DashboardController extends Controller
             // - Average score trend
             $recentTests = $tests->sortByDesc('finished_at')->take(5);
             $recentPassRate = $recentTests->count() > 0
-                ? ($recentTests->where('status', TestResult::STATUS_PASSED)->count() / $recentTests->count()) * 100
+                ? ($recentTests->where('status', TestStatus::Passed)->count() / $recentTests->count()) * 100
                 : 0;
             $recentAvgScore = $recentTests->avg('score_percentage') ?? 0;
 
@@ -195,7 +192,7 @@ class DashboardController extends Controller
     /**
      * Calculate performance trend (improving, declining, stable).
      */
-    private function calculateTrend($tests): string
+    private function calculateTrend(Collection $tests): string
     {
         if ($tests->count() < 3) {
             return 'stable';
