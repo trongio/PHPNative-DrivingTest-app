@@ -311,21 +311,33 @@ export default function QuestionsIndex({
         localFiltersRef.current = localFilters;
     }, [localFilters]);
 
+    // Helper to format filters for request (converts categories array to string)
+    const formatFiltersForRequest = useCallback(
+        (filtersToFormat: Filters) => ({
+            license_type: filtersToFormat.license_type,
+            categories: filtersToFormat.categories.join(','),
+            show_inactive: filtersToFormat.show_inactive,
+            bookmarked: filtersToFormat.bookmarked || undefined,
+            correct_only: filtersToFormat.correct_only || undefined,
+            wrong_only: filtersToFormat.wrong_only || undefined,
+            unanswered: filtersToFormat.unanswered || undefined,
+            per_page: filtersToFormat.per_page,
+            sign_id: filtersToFormat.sign_id,
+        }),
+        [],
+    );
+
     // Close filter sheet and apply filters
     const closeFilterSheet = useCallback(() => {
         setCategorySearch('');
         setIsFilterOpen(false);
         // Apply filters
-        const currentFilters = localFiltersRef.current;
         router.get(
             '/questions',
-            {
-                ...currentFilters,
-                categories: currentFilters.categories.join(','),
-            },
+            formatFiltersForRequest(localFiltersRef.current),
             { preserveState: true, preserveScroll: true },
         );
-    }, []);
+    }, [formatFiltersForRequest]);
 
     // Sync localFilters with server filters when they change
     // Don't sync while filter sheet is open (preserves user's selections)
@@ -463,44 +475,37 @@ export default function QuestionsIndex({
 
     // Toggle inactive questions filter
     const toggleInactiveFilter = useCallback(() => {
-        const newShowInactive = !localFilters.show_inactive;
-        setLocalFilters((f) => ({ ...f, show_inactive: newShowInactive }));
-        router.get(
-            '/questions',
-            { ...localFilters, show_inactive: newShowInactive },
-            { preserveState: true, preserveScroll: true },
-        );
-    }, [localFilters]);
+        const newFilters = { ...localFilters, show_inactive: !localFilters.show_inactive };
+        setLocalFilters(newFilters);
+        router.get('/questions', formatFiltersForRequest(newFilters), {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, [localFilters, formatFiltersForRequest]);
 
     // Toggle bookmarked questions filter
     const toggleBookmarkFilter = useCallback(() => {
-        const newBookmarked = !localFilters.bookmarked;
-        setLocalFilters((f) => ({ ...f, bookmarked: newBookmarked }));
+        const newFilters = { ...localFilters, bookmarked: !localFilters.bookmarked };
+        setLocalFilters(newFilters);
 
-        // Build request params, excluding bookmarked when false to avoid filtering issues
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { bookmarked: _bookmarked, ...restFilters } = localFilters;
-        const requestParams = newBookmarked
-            ? { ...restFilters, bookmarked: true }
-            : restFilters;
-
-        // Preserve session IDs for correct/wrong filters (comma-separated for NativePHP)
-        if (localFilters.correct_only && sessionCorrectIds.length > 0) {
-            Object.assign(requestParams, {
-                session_correct_ids: sessionCorrectIds.join(','),
-            });
-        }
-        if (localFilters.wrong_only && sessionWrongIds.length > 0) {
-            Object.assign(requestParams, {
-                session_wrong_ids: sessionWrongIds.join(','),
-            });
-        }
+        const requestParams = {
+            ...formatFiltersForRequest(newFilters),
+            // Preserve session IDs for correct/wrong filters
+            session_correct_ids:
+                newFilters.correct_only && sessionCorrectIds.length > 0
+                    ? sessionCorrectIds.join(',')
+                    : undefined,
+            session_wrong_ids:
+                newFilters.wrong_only && sessionWrongIds.length > 0
+                    ? sessionWrongIds.join(',')
+                    : undefined,
+        };
 
         router.get('/questions', requestParams, {
             preserveState: true,
             preserveScroll: true,
         });
-    }, [localFilters, sessionCorrectIds, sessionWrongIds]);
+    }, [localFilters, formatFiltersForRequest, sessionCorrectIds, sessionWrongIds]);
 
     // Toggle answer status filter (correct/wrong) - only one can be active
     // Uses session-based IDs for filtering (comma-separated for NativePHP compatibility)
@@ -517,17 +522,16 @@ export default function QuestionsIndex({
             };
             setLocalFilters(newFilters);
 
-            // Pass session IDs as comma-separated strings for NativePHP compatibility
             const requestParams = {
-                ...newFilters,
+                ...formatFiltersForRequest(newFilters),
                 session_correct_ids:
                     type === 'correct' && !isCurrentlyActive
                         ? sessionCorrectIds.join(',')
-                        : '',
+                        : undefined,
                 session_wrong_ids:
                     type === 'wrong' && !isCurrentlyActive
                         ? sessionWrongIds.join(',')
-                        : '',
+                        : undefined,
             };
 
             router.get('/questions', requestParams, {
@@ -535,7 +539,7 @@ export default function QuestionsIndex({
                 preserveScroll: true,
             });
         },
-        [localFilters, sessionCorrectIds, sessionWrongIds],
+        [localFilters, formatFiltersForRequest, sessionCorrectIds, sessionWrongIds],
     );
 
     const goToPage = useCallback(
@@ -653,17 +657,14 @@ export default function QuestionsIndex({
                     <LicenseTypeSelect
                         value={localFilters.license_type}
                         onValueChange={(newLicenseType) => {
-                            setLocalFilters((f) => ({
-                                ...f,
+                            const newFilters = {
+                                ...localFilters,
                                 license_type: newLicenseType,
-                            }));
-                            // Immediately apply license type change
+                            };
+                            setLocalFilters(newFilters);
                             router.get(
                                 '/questions',
-                                {
-                                    ...localFilters,
-                                    license_type: newLicenseType,
-                                },
+                                formatFiltersForRequest(newFilters),
                                 {
                                     preserveState: true,
                                     preserveScroll: true,
