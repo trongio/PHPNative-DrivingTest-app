@@ -70,7 +70,7 @@ test('user can create a new profile', function () {
 
     $page->click('ახალი მომხმარებელი')
         ->assertSee('ახალი მომხმარებელი')
-        ->fill('input[placeholder="სახელი / მეტსახელი"]', 'Brand New User')
+        ->fill('#name', 'Brand New User')
         ->click('დაწყება')
         ->assertPathIs('/dashboard')
         ->assertNoJavaScriptErrors();

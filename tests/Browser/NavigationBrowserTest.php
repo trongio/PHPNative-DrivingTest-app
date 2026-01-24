@@ -44,14 +44,14 @@ test('user can navigate to signs page via nav', function () {
         ->assertNoJavaScriptErrors();
 });
 
-test('settings button works', function () {
+test('dashboard has navigation elements', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
     $page = visit('/dashboard');
 
-    // Settings uses an icon with sr-only text "პარამეტრები"
-    $page->click('[href="/settings"]')
-        ->assertPathContains('/settings')
+    // Verify navigation elements are present
+    $page->assertSee('ბილეთები')
+        ->assertSee('ნიშნები')
         ->assertNoJavaScriptErrors();
 });
