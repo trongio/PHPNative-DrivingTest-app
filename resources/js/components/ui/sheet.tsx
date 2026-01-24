@@ -1,5 +1,5 @@
 import * as SheetPrimitive from "@radix-ui/react-dialog"
-import { XIcon } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -46,10 +46,16 @@ function SheetContent({
   className,
   children,
   side = "right",
+  hideClose = false,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
+  hideClose?: boolean
 }) {
+  // For right-side sheets, close button on left; for left-side sheets, close button on right
+  const closeButtonPosition = side === "left" ? "right-4" : "left-4";
+  const closeButtonRotation = side === "left" ? "rotate-180" : "";
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -73,11 +79,19 @@ function SheetContent({
         }}
         {...props}
       >
+        {!hideClose && (side === "left" || side === "right") && (
+          <SheetPrimitive.Close
+            className={cn(
+              "absolute flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted focus:outline-none",
+              closeButtonPosition
+            )}
+            style={{ top: 'calc(var(--inset-top, 0px) + 1.25rem)' }}
+          >
+            <ArrowLeft className={cn("h-5 w-5", closeButtonRotation)} />
+            <span className="sr-only">Close</span>
+          </SheetPrimitive.Close>
+        )}
         {children}
-        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute right-5 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none" style={{ top: 'calc(var(--inset-top, 0px) + 1.25rem)' }}>
-          <XIcon className="size-5" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
   )

@@ -696,7 +696,7 @@ export default function QuestionsIndex({
                             className="flex flex-col overflow-hidden"
                             onOpenAutoFocus={(e) => e.preventDefault()}
                         >
-                            <SheetHeader className="px-5">
+                            <SheetHeader className="flex-row items-center gap-3 px-5 pl-14">
                                 <SheetTitle className="text-xl">
                                     თემები
                                 </SheetTitle>
